@@ -691,7 +691,8 @@ module ActiveMerchant #:nodoc:
         end
 
         success = response[:decision] == "ACCEPT"
-        message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message]
+        message = response[:message]
+
         authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken], action, amount, options[:currency]].compact.join(";") : nil
 
         Response.new(success, message, response,
@@ -709,9 +710,9 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(xml)
         if root = REXML::XPath.first(xml, "//c:replyMessage")
           root.elements.to_a.each do |node|
-            case node.name
+            case node.expanded_name
             when 'c:reasonCode'
-              reply[:message] = reply(node.text)
+              reply[:message] = reason_message(node.text)
             else
               parse_element(reply, node)
             end
@@ -735,6 +736,12 @@ module ActiveMerchant #:nodoc:
           end
         end
         return reply
+      end
+
+      def reason_message(reason_code)
+        return if reason_code.blank?
+        message = @@response_codes[:"r#{reason_code}"]
+        message ||= "Invalid address" if reason_code >= 450 && response_code <= 460
       end
     end
   end
