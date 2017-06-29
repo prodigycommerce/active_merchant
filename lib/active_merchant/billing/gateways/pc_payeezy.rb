@@ -113,7 +113,7 @@ module ActiveMerchant
         if payment_method.is_a? Hash
           add_token(params, payment_method)
         else
-          add_creditcard(params, payment_method)
+          add_credit_card(params, payment_method)
         end
       end
 
@@ -162,7 +162,7 @@ module ActiveMerchant
 
         level2 = {}
         level2[:tax1_amount] = level2_data[:tax_amount]
-        level2[:customer_ref] = level2_data[:order_id]
+        level2[:customer_ref] = options[:order_id]
 
         params[:level2] = level2
       end

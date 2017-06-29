@@ -140,7 +140,7 @@ module ActiveMerchant
         level2 = options[:level2]
         return unless level2
 
-        params[:ponumber] = level2[:ponumber]
+        params[:ponumber] = options[:order_id]
         params[:taxamnt] = level2[:tax_amount]
       end
 
