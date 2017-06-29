@@ -153,7 +153,7 @@ module ActiveMerchant
         params[:shiptozip] = level3[:ship_to_zip]
         params[:shipfromzip] = level3[:ship_from_zip]
         params[:shiptocountry] = level3[:ship_to_country]
-        params[:items] = array()
+        params[:items] = []
         level3[:line_items].each_with_index do |item, index|
           params[:items] <<
           {
