@@ -17,6 +17,9 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(DE GB FR IT ES PL NL BE GR CZ PT SE HU RS AT CH BG DK FI SK NO IE HR BA AL LT MK SI LV EE ME LU MT IS AD MC LI SM)
       self.default_currency = "EUR"
+      self.currencies_without_fractions = %w(CLP JPY KRW PYG VND)
+      self.currencies_with_three_decimal_places = %w(BHD JOD KWD OMR RSD TND)
+
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :maestro]
 
@@ -108,6 +111,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
         add_email(post, options)
+        add_3d_secure(post, options)
         add_echo(post, options)
 
         commit(:purchase, post)
@@ -119,6 +123,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
         add_email(post, options)
+        add_3d_secure(post, options)
         add_echo(post, options)
 
         commit(:authorize, post)
@@ -185,9 +190,11 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(post, money, options)
-        post[:a4] = amount(money)
+        currency = options[:currency] || currency(money)
+
+        post[:a4] = localized_amount(money, currency)
         post[:a1] = generate_unique_id
-        post[:a5] = options[:currency] || currency(money)
+        post[:a5] = currency
         post[:h9] = options[:order_id]
       end
 
@@ -230,6 +237,11 @@ module ActiveMerchant #:nodoc:
         post[:c3] = options[:email] || 'unspecified@example.com'
       end
 
+      def add_3d_secure(post, options)
+        return unless options[:eci] && options[:xid]
+        post[:i8] = "#{options[:eci]}:#{(options[:cavv] || "none")}:#{options[:xid]}"
+      end
+
       def add_echo(post, options)
         # The d2 parameter is used during the certification process
         # See remote tests for full certification test suite
@@ -240,7 +252,7 @@ module ActiveMerchant #:nodoc:
         purchase: '1',
         authorize: '2',
         capture: '3',
-        authorize_void:'4',
+        authorize_void: '4',
         refund: '5',
         credit: '6',
         purchase_void: '7',

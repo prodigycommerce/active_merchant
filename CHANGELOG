@@ -1,6 +1,54 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
+* Adyen: Use Active Merchant standard order_id option for reference [jasonwebster] #2483
+
+== Version 1.68.0 (June 27, 2017)
+* Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476
+* Authorize.net: Concatenate address1 and address2 [dtykocki] #2479
+* Braintree Blue: Braintree Blue: Add ECI indicator to Android Pay transactions [davidsantoso] #2474
+* Credorax: Support 0- and 3-exponent currencies [curiousepic]
+* Cybersource: update supported card types [bdewater] #2477
+* FirstData: Add a default network tokenization strategy for FirstData E4 [krystosterone] #2473
+* FirstPay: FirstPay: Update hostname and force TLSv1 minimum [davidsantoso] #2478
+* JetPay V2: Support store transactions and token based payments [shasum] #2475
+* Moneris: Add 3DS fields for decrypted Apple and Android Pay data [davidsantoso] #2457
+* Openpay: Send customer name and email in authorize and purchase [dtykocki] #2468
+* Payflow: Moved to name value pair (NVP) with payflow [jusleg] #2462
+* Payflow: Set PAYPAL_NVP header as optional [davidsantoso] #2480
+* QuickPay V10: Return last response for purchase and authorize [curiousepic] #2461
+* SafeCharge: Map billing address fields [davidsantoso] #2464
+* SafeCharge: Track currency from original transaction [davidsantoso] #2470
+* Support three-decimal currencies [curiousepic] #2466
+* Trexle: Add gateway support [hossamhossny] #2351
+
+== Version 1.67.0 (June 8, 2017)
+* Acapture: Pass 3D Secure fields [davidsantoso] #2451
+* Authorize.net: Pass Level 2 Data Fields [curiousepic] #2444
+* Credorax: Add 3D Secure authentication fields [davidsantoso] #2446
+* Ebanx: Add gateway support [davidsantoso] #2447
+* Ebanx: Reduce supported countries to Brazil and Mexico [davidsantoso]
+* FirstData Payeezy: Set default ECI value for auth/purchase transactions [jasonwebster] #2448
+* JetPay V2: Add new gateway [shasum] #2442
+* JetPay V2: Add optional tax data to capture calls [shasum] #2445
+* NMI: Add Network Tokenization support [shasum] #2431
+* Orbital: Pass soft descriptors from options hash [curiousepic]
+* Orbital: Update test and production urls [jcowhigjr] #2436
+* Payeezy: Add client_email field for telecheck [davidsantoso] #2455
+* Payeezy: Add customer_id_type and customer_id_number fields [davidsantoso] #2454
+* Quickpay V10: Fix store and token use for recurring payments [wsmoak] #2180
+* Elavon: Support custom fields [curiousepic] #2416
+* WePay: Support risk headers [shasum] #2419
+* WePay: Add Canada as supported country [shasum] #2419
+* Fat Zebra: Fix xid 3D Secure field [curiousepic]
+* SafeCharge: Mark support for European countries [curiousepic]
+* Checkout V2: Pass customer ip option [curiousepic]
+* Realex: Map AVS and CVV response codes [davidsantoso] #2424
+* Opp: Send disable3DSecure custom parameter if present [davidsantoso] #2432
+* SafeCharge: Map standard Active Merchant order_id field [davidsantoso] #2434
+* Payeezy: Default check number to 001 if not present [davidsantoso] #2439
+* Opp: Fix incorrect customParameter key to disable 3DS [davidsantoso]
 
 == Version 1.66.0 (May 4, 2017)
 * Support Rails 5.1 [jhawthorn] #2407
@@ -11,12 +59,6 @@
 * iVeri: Add gateway support [curiousepic] #2400
 * iVeri: Support 3DSecure data fields [davidsantoso] #2412
 * Opp: Fix transaction success criteria and clean up options [shasum] #2414
-* Elavon: Support custom fields [curiousepic] #2416
-* WePay: Support risk headers [shasum] #2419
-* WePay: Add Canada as supported country [shasum] #2419
-* Fat Zebra: Fix xid 3D Secure field [curiousepic]
-* SafeCharge: Mark support for European countries [curiousepic]
-
 
 == Version 1.65.0 (April 26, 2017)
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272

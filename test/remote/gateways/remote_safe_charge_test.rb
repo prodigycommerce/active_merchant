@@ -8,8 +8,10 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @options = {
+      order_id: generate_unique_id,
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      currency: "EUR"
     }
   end
 
