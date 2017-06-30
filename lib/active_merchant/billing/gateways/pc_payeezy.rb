@@ -13,6 +13,42 @@ module ActiveMerchant
 
       self.homepage_url = 'http://www.cardconnect.com/'
       self.display_name = 'Ignite Payments Payeezy'
+      
+      AVS_CODE_MAPPING = {
+        '1' => 'K',
+        '2' => 'V',
+        '3' => 'L',
+        '4' => 'O',
+        '5' => 'H',
+        '6' => 'F',
+        '7' => 'T',
+        '8' => 'N',
+        'Y' => 'Y',
+        'A' => 'A',
+        'W' => 'W',
+        'Z' => 'Z',
+        'N' => 'N',
+        'U' => 'U',
+        'G' => 'G',
+        'R' => 'R',
+        'E' => 'E',
+        'S' => 'S',
+        'Q' => 'I',
+        'D' => 'D',
+        'B' => 'B',
+        'C' => 'C',
+        'P' => 'P'
+       }
+      
+      CVV_CODE_MAPPING = {
+        'I' => 'I',
+        'M' => 'M',
+        'N' => 'N',
+        'P' => 'P',
+        'S' => 'S',
+        'U' => 'U',
+        'Z' => 'U'
+      }
 
       CREDIT_CARD_BRAND = {
         'visa' => 'Visa',
@@ -240,8 +276,8 @@ module ActiveMerchant
           response,
           test: test?,
           authorization: authorization_from(params, response),
-          avs_result: {code: response['avs']},
-          cvv_result: response['cvv2'],
+          avs_result: {code: AVS_CODE_MAPPING[response['avs']]},
+          cvv_result: CVV_CODE_MAPPING[response['cvv2']],
           error_code: error_code(response, success_from(response)),
           token: response.dig('token', 'token_data', 'value')
         )
