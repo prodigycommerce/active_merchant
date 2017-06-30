@@ -87,7 +87,7 @@ module ActiveMerchant
         add_invoice(params, options)
         add_credit_card(params, creditcard)
         add_address(params, options)
-        add_amount(params, '0', options)
+        add_amount_to_verify(params, '0', options)
 
         commit(params, options)
       end
@@ -196,6 +196,11 @@ module ActiveMerchant
       def add_amount(params, money, options)
         params[:currency_code] = (options[:currency] || default_currency).upcase
         params[:amount] = amount(money)
+      end
+      
+      def add_amount_to_verify(params, money, options)
+        params[:currency_code] = (options[:currency] || default_currency).upcase
+        params[:amount] = money
       end
 
       def amount_from_authorization(authorization)
