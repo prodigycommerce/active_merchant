@@ -238,7 +238,7 @@ module ActiveMerchant
           avs_result: {code: response['avs']},
           cvv_result: response['cvv2'],
           error_code: error_code(response, success_from(response)),
-          token: response.dig(:token, :token_data, :value)
+          token: response.dig('token', 'token_data', 'value')
         )
       end
 
