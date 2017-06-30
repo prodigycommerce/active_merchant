@@ -70,12 +70,11 @@ module ActiveMerchant
       end
 
       def verify(creditcard, options = {})
-        params = {type: 'validate'}
+        params = {type: 'validate', amount: '0', currency: (options[:currency] || default_currency).upcase}
 
         add_invoice(params, options)
         add_credit_card(params, creditcard)
         add_address(params, options)
-        add_amount(params, '0', options)
 
         commit(params, options)
       end
