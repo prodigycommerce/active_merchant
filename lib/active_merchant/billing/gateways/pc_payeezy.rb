@@ -118,7 +118,7 @@ module ActiveMerchant
       end
 
       def verify(creditcard, options = {})
-        params = {transaction_type: 'authorize', amount: '0', currency: (options[:currency] || default_currency).upcase}
+        params = {transaction_type: 'authorize', amount: '0', currency_code: (options[:currency] || default_currency).upcase}
 
         add_invoice(params, options)
         add_credit_card(params, creditcard)

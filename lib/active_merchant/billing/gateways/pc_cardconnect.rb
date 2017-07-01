@@ -72,12 +72,11 @@ module ActiveMerchant
       end
 
       def verify(creditcard, options={})
-        params = {endpoint: 'auth'}
+        params = {endpoint: 'auth', amount: '0', currency: (options[:currency] || default_currency).upcase}
 
         add_invoice(params, options)
         add_credit_card(params, creditcard)
         add_address(params, options)
-        add_amount(params, '0', options)
 
         commit(params, options)
       end
@@ -91,8 +90,7 @@ module ActiveMerchant
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((\\?"account\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?"cvv2\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r((\\?"merchid\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r((\\?"bankaba\\?":\\?")\d+), '\1[FILTERED]')
+          gsub(%r((\\?"merchid\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       private
