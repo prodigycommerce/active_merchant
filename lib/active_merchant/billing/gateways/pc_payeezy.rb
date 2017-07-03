@@ -155,7 +155,7 @@ module ActiveMerchant
       def add_token(params, token)
         token_data = {}
 
-        token_data[:type] = token[:type]
+        token_data[:type] = CREDIT_CARD_BRAND[token[:type]]
         token_data[:value] = token[:token]
         token_data[:cardholder_name] = token[:cardholder_name]
         token_data[:exp_date] = token[:exp_date]
