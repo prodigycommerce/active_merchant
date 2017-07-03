@@ -160,6 +160,7 @@ module ActiveMerchant
         token_data[:cardholder_name] = token[:cardholder_name]
         token_data[:exp_date] = token[:exp_date]
 
+        params[:method] = 'token'
         params[:token] = {}
         params[:token][:token_type] = 'FDToken'
         params[:token][:token_data] = token_data
