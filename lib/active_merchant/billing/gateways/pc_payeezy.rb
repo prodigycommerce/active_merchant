@@ -213,6 +213,15 @@ module ActiveMerchant
         level3[:duty_amount] = level3_data[:duty_amount]
         level3[:freight_amount] = level3_data[:shipping_amount]
         level3[:ship_from_zip] = level3_data[:ship_from_zip]
+        level3[:ship_to_address] = {
+          :address_1 => level3_data[:ship_to_address_1],
+          :city => level3_data[:ship_to_city],
+          :state => level3_data[:ship_to_state],
+          :zip => level3_data[:ship_to_zip],
+          :country => level3_data[:ship_to_country],
+          :email => level3_data[:ship_to_email],
+          :phone => level3_data[:ship_to_phone]
+        }
         level3[:line_items] =[]
         level3_data[:line_items].each do |item|
           level3[:line_items] <<
