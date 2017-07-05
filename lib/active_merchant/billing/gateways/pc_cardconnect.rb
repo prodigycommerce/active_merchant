@@ -180,7 +180,7 @@ module ActiveMerchant
 
       def commit(params, options)
         params[:merchid] = @options[:merchid]
-        endpoint = params.delete[:endpoint]
+        endpoint = params.delete(:endpoint)
         if test?
           url = "#{test_url}/#{endpoint}"
         else
