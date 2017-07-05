@@ -13,6 +13,15 @@ module ActiveMerchant
 
       self.homepage_url = 'http://www.cardconnect.com/'
       self.display_name = 'CardConnect'
+      
+      CREDIT_CARD_BRAND = {
+        'visa' => 'VISA',
+        'master' => 'MC',
+        'american_express' => 'AMEX',
+        'discover' => 'DSCV',
+        'jcb' => 'JCB',
+        'diners_club' => 'DNR'
+      }
 
       def initialize(options = {})
         requires!(options, :username, :password, :merchid)
@@ -108,14 +117,14 @@ module ActiveMerchant
       end
 
       def add_token(params, token)
-        params[:accttype] = token[:type]
+        params[:accttype] = CREDIT_CARD_BRAND[token[:type]]
         params[:name] = token[:cardholder_name]
         params[:account] = token[:token]
         params[:expiry] = token[:exp_date]
       end
 
       def add_credit_card(params, creditcard)
-        params[:accttype] = creditcard.brand
+        params[:accttype] = CREDIT_CARD_BRAND[creditcard.brand]
         params[:name] = creditcard.name
         params[:account] = creditcard.number
         params[:expiry] = "#{format(creditcard.month, :two_digits)}#{format(creditcard.year, :two_digits)}"
