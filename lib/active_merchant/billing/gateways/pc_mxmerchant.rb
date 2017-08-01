@@ -203,7 +203,7 @@ module ActiveMerchant
         params[:dutyAmount] = level3[:duty_amount]
         params[:shipAmount] = level3[:shipping_amount]
         params[:shipToZip] = level3[:ship_to_zip]
-        params[:shipToCountry] = levcel3[:ship_to_country]
+        params[:shipToCountry] = level3[:ship_to_country]
         params[:purchases] = []
         level3[:line_items].each do |item|
           params[:purchases] <<
