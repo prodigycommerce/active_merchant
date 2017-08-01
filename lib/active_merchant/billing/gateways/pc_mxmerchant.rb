@@ -74,10 +74,10 @@ module ActiveMerchant
       def authorize(amount, payment_method, options = {})
         params = {authOnly: true, method: :post}
 
-        add_invoice(params, options)
+        #add_invoice(params, options)
         add_payment_method(params, payment_method, options)
-        add_level2(params, options)
-        add_level3(params, options)
+        #add_level2(params, options)
+        #add_level3(params, options)
         add_amount(params, amount, options)
 
         commit(params, options)
