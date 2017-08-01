@@ -167,7 +167,7 @@ module ActiveMerchant
         card_account[:name] = creditcard.name
         card_account[:number] = creditcard.number
         card_account[:expiryMonth] = format(creditcard.month, :two_digits)
-        card_account[:expiryYear] = format(creditcard.year, :two_digits)
+        card_account[:expiryyear] = format(creditcard.year, :two_digits)
         card_account[:cvv] = creditcard.verification_value if creditcard.verification_value?
         card_account[:avsZip] = address[:zip] if address[:zip]
         card_account[:avsStreet] = address[:address1] if address[:address1]
