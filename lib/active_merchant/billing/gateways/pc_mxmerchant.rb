@@ -134,7 +134,7 @@ module ActiveMerchant
       private
 
       def add_invoice(params, options)
-        params[:invoice] = options[:order_id]
+        params[:invoice] = options[:order_id][0,8]
       end
 
       def add_payment_method(params, payment_method, options)
