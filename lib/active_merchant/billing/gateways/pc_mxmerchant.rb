@@ -182,7 +182,7 @@ module ActiveMerchant
 
         params[:customerCode] = options[:order_id]
         params[:tax] = level2[:tax_amount]
-        patams[:taxExempt] = tax_exempt(level2[:tax_amount])
+        params[:taxExempt] = tax_exempt(level2[:tax_amount])
       end
 
       def add_level3(params, options)
