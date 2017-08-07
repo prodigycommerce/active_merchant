@@ -74,10 +74,10 @@ module ActiveMerchant
       def authorize(amount, payment_method, options = {})
         params = {authOnly: true, method: :post}
 
-        #add_invoice(params, options)
+        add_invoice(params, options)
         add_payment_method(params, payment_method, options)
-        #add_level2(params, options)
-        #add_level3(params, options)
+        add_level2(params, options)
+        add_level3(params, options)
         add_amount(params, amount, options)
 
         commit(params, options)
@@ -134,7 +134,7 @@ module ActiveMerchant
       private
 
       def add_invoice(params, options)
-        #params[:invoiceId] = options[:order_id]
+        params[:invoice] = options[:order_id]
       end
 
       def add_payment_method(params, payment_method, options)
@@ -176,29 +176,20 @@ module ActiveMerchant
         params[:cardAccount] = card_account
       end
 
-      def add_credit_card_vault(params, creditcard, options)
-        address = options[:billing_address]
-
-        params[:number] = creditcard.number
-        params[:expiryMonth] = format(creditcard.month, :two_digits)
-        params[:expiryYear] = format(creditcard.year, :two_digits)
-        params[:cvv] = creditcard.verification_value if creditcard.verification_value?
-        params[:avsZip] = address[:zip] if address[:zip]
-        params[:avsStreet] = address[:address1] if address[:address1]
-      end
-
       def add_level2(params, options)
         level2 = options[:level2]
         return unless level2
 
         params[:customerCode] = options[:order_id]
         params[:tax] = level2[:tax_amount]
+        patams[:taxExempt] = tax_exempt(level2[:tax_amount])
       end
 
       def add_level3(params, options)
         level3 = options[:level3]
         return unless level3
 
+        params[:departmentName] = "Purchasing"
         params[:discountAmount] = level3[:discount_amount]
         params[:dutyAmount] = level3[:duty_amount]
         params[:shipAmount] = level3[:shipping_amount]
@@ -245,6 +236,10 @@ module ActiveMerchant
         id, authcode, token, _ = authorization.split('|')
 
         params[:id] = id
+      end
+
+      def tax_exempt(tax_amount)
+        tax_amount.to_f == 0
       end
 
       def commit(params, options)
