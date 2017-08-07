@@ -111,12 +111,10 @@ module ActiveMerchant
       end
 
       def verify(creditcard, options = {})
-        params = {authOnly: true, amount: '0.00', method: :post}
-
-        add_invoice(params, options)
-        add_credit_card(params, creditcard, options)
-
-        commit(params, options)
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
       end
 
       def supports_scrubbing?
