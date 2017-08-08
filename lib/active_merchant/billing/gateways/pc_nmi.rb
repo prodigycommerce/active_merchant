@@ -159,12 +159,19 @@ module ActiveMerchant
           url = live_url
         end
 
-        body = params.to_query
-        response = parse(ssl_post(url, body, headers))
+        begin
+          body = params.to_query
+          raw_response = ssl_post(url, body, headers)
+          response = parse(raw_response)
+        rescue ResponseError => e
+          response = response_error(e.response.body)
+        rescue Exception
+          response = parse_error(raw_response)
+        end
 
         Response.new(
           success_from(response),
-          response[:responsetext],
+          handle_message(response, success_from(response)),
           response,
           test: test?,
           authorization: authorization_from(params, response),
@@ -187,6 +194,16 @@ module ActiveMerchant
         ].join('|')
       end
 
+      def handle_message(response, success)
+        if success
+          response[:responsetext]
+        elsif response.key?('error')
+          response['error']
+        else
+          response[:responsetext]
+        end
+      end
+
       def headers
         { "Content-Type"  => "application/x-www-form-urlencoded;charset=UTF-8" }
       end
@@ -201,6 +218,16 @@ module ActiveMerchant
           response[:response],
           response[:responsetext]
         ].join('|')
+      end
+
+      def response_error(raw_response)
+        parse(raw_response)
+      rescue Exception
+        parse_error(raw_response)
+      end
+
+      def parse_error(raw_response)
+        {"error" => "Unable to parse response: #{raw_response.inspect}"}
       end
     end
   end

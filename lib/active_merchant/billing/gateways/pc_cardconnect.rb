@@ -198,7 +198,8 @@ module ActiveMerchant
 
         begin
           body = params.to_json
-          response = parse(ssl_request(:put, url, body, headers))
+          raw_response = ssl_request(:put, url, body, headers)
+          response = parse(raw_response)
         rescue ResponseError => e
           response = response_error(e.response.body)
         rescue JSON::ParserError
@@ -207,7 +208,7 @@ module ActiveMerchant
 
         Response.new(
           success_from(response),
-          response['resptext'],
+          handle_message(response, success_from(response)),
           response,
           test: test?,
           authorization: success_from(response) ? authorization_from(params, response) : '',
@@ -236,6 +237,16 @@ module ActiveMerchant
           response['respcode'],
           response['resptext']
         ].join('|')
+      end
+      
+      def handle_message(response, success)
+        if success
+          response['resptext']
+        elsif response.key?('error')
+          response['error']
+        else
+          response['resptext']
+        end
       end
 
       def headers

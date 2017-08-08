@@ -268,7 +268,8 @@ module ActiveMerchant
 
         begin
           body = params.to_json
-          response = parse(ssl_post(url, body, headers(body)))
+          raw_response = ssl_post(url, body, headers(body))
+          response = parse(raw_response)
         rescue ResponseError => e
           response = response_error(e.response.body)
         rescue JSON::ParserError

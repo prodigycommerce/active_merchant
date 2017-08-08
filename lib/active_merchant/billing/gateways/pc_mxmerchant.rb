@@ -60,8 +60,6 @@ module ActiveMerchant
       end
 
       def purchase(amount, payment_method, options = {})
-        params = {method: :post}
-
         add_invoice(params, options)
         add_payment_method(params, payment_method, options)
         add_level2(params, options)
@@ -72,7 +70,7 @@ module ActiveMerchant
       end
 
       def authorize(amount, payment_method, options = {})
-        params = {authOnly: true, method: :post}
+        params = {authOnly: true}
 
         add_invoice(params, options)
         add_payment_method(params, payment_method, options)
@@ -84,7 +82,7 @@ module ActiveMerchant
       end
 
       def capture(amount, authorization, options = {})
-        params = {authOnly: false, tenderType: 'Card', method: :post}
+        params = {authOnly: false, tenderType: 'Card'}
 
         add_authorization_authcode(params, authorization)
         add_authorization_token(params, authorization)
@@ -94,7 +92,7 @@ module ActiveMerchant
       end
 
       def refund(amount, authorization, options = {})
-        params = {tenderType: 'Card', method: :post}
+        params = {tenderType: 'Card'}
 
         add_authorization_token(params, authorization)
         add_refund_amount(params, amount, options)
@@ -103,11 +101,9 @@ module ActiveMerchant
       end
 
       def void(authorization, options = {})
-        params = {method: :delete}
-
         add_authorization_id(params, authorization)
 
-        commit(params, options)
+        commit_delete(params)
       end
 
       def verify(creditcard, options = {})
@@ -242,23 +238,17 @@ module ActiveMerchant
 
       def commit(params, options)
         params[:merchantId] = @options[:merchid]
-        method = params.delete(:method)
 
         if test?
-          url = test_url
+          url = "#{test_url}?echo=true"
         else
-          url = live_url
-        end
-
-        if id = params.delete(:id)
-          url = "#{url}/#{id}?echo=true"
-        else
-          url = "#{url}?echo=true"
+          url = "#{live_url}?echo=true"
         end
 
         begin
           body = params.to_json
-          response = parse(ssl_request(method, url, body, headers))
+          raw_response = ssl_post(url, body, headers)
+          response = parse(raw_response)
         rescue ResponseError => e
           response = response_error(e.response.body)
         rescue JSON::ParserError
@@ -267,7 +257,7 @@ module ActiveMerchant
 
         Response.new(
           success_from(response),
-          response['status'],
+          handle_message(response, success_from(response)),
           response,
           test: test?,
           authorization: authorization_from(params, response),
@@ -275,6 +265,28 @@ module ActiveMerchant
           cvv_result: CVV_CODE_MAPPING[response.dig('risk', 'cvvResponseCode')],
           error_code: error_code(response, success_from(response)),
           token: response['paymentToken']
+        )
+      end
+      
+      def commit_delete(params)
+        if test?
+          url = "#{test_url}/#{params['id']}"
+        else
+          url = "#{live_url}/#{params['id']}"
+        end
+        
+        begin
+          ssl_request(:delete, url, nil, headers)
+          success = true
+          message = "Approved"
+        rescue ResponseError => e
+          success = false
+          message = "Declined"
+        end
+
+        Response.new(
+          success,
+          message
         )
       end
 
@@ -292,7 +304,21 @@ module ActiveMerchant
 
       def error_code(response, success)
         return if success
-        response['details'].first
+        response['errorCode']
+      end
+      
+      def handle_message(response, success)
+        if success
+          response['status']
+        elsif response.key?('details')
+          response['details'].first
+        elsif response.key?('message')
+          response['message']
+        elsif response.key?('error')
+          response['error']
+        else
+          response['status']
+        end
       end
 
       def headers
