@@ -153,6 +153,7 @@ module ActiveMerchant
         card_account[:expiryYear] = token[:exp_date][-2..-1]
         card_account[:avsZip] = address[:zip] if address[:zip]
         card_account[:avsStreet] = address[:address1] if address[:address1]
+        card_account[:cardPresent] = false
 
         params[:tenderType] = 'Card'
         params[:cardAccount] = card_account
@@ -169,6 +170,7 @@ module ActiveMerchant
         card_account[:cvv] = creditcard.verification_value if creditcard.verification_value?
         card_account[:avsZip] = address[:zip] if address[:zip]
         card_account[:avsStreet] = address[:address1] if address[:address1]
+        card_account[:cardPresent] = false
 
         params[:tenderType] = 'Card'
         params[:cardAccount] = card_account
