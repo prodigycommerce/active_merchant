@@ -60,6 +60,8 @@ module ActiveMerchant
       end
 
       def purchase(amount, payment_method, options = {})
+        params = {}
+
         add_invoice(params, options)
         add_payment_method(params, payment_method, options)
         add_level2(params, options)

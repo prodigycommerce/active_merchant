@@ -13,6 +13,37 @@ module ActiveMerchant
 
       self.homepage_url = 'http://www.nmi.com/'
       self.display_name = 'Network Merchants Inc (NMI)'
+      
+      AVS_CODE_MAPPING = {
+        '0' => 'R',
+        '1' => 'L',
+        '2' => 'V',
+        '3' => 'O',
+        '4' => 'N',
+        '5' => 'L',
+        '6' => 'V',
+        '7' => 'O',
+        '8' => 'N',
+        'A' => 'A',
+        'B' => 'R',
+        'C' => 'C',
+        'D' => 'D',
+        'E' => 'E',
+        'G' => 'G',
+        'I' => 'I',
+        'L' => 'L',
+        'M' => 'M',
+        'N' => 'N',
+        'O' => 'R',
+        'P' => 'P',
+        'R' => 'R',
+        'S' => 'S',
+        'U' => 'U',
+        'W' => 'W',
+        'X' => 'X',
+        'Y' => 'Y',
+        'Z' => 'Z'
+      }
 
       def initialize(options = {})
         requires!(options, :username, :password)
@@ -175,7 +206,7 @@ module ActiveMerchant
           response,
           test: test?,
           authorization: authorization_from(params, response),
-          avs_result: {code: response[:avsresponse]},
+          avs_result: {code: AVS_CODE_MAPPING[response[:avsresponse]]},
           cvv_result: response[:cvvresponse],
           error_code: error_code(response, success_from(response)),
           token: response[:customer_vault_id]
