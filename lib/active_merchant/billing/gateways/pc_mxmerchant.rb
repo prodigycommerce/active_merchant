@@ -274,9 +274,9 @@ module ActiveMerchant
       
       def commit_delete(params)
         if test?
-          url = "#{test_url}/#{params['id']}"
+          url = "#{test_url}/#{params[:id]}"
         else
-          url = "#{live_url}/#{params['id']}"
+          url = "#{live_url}/#{params[:id]}"
         end
         
         begin
