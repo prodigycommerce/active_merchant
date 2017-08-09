@@ -103,6 +103,8 @@ module ActiveMerchant
       end
 
       def void(authorization, options = {})
+        params = {}
+
         add_authorization_id(params, authorization)
 
         commit_delete(params)
