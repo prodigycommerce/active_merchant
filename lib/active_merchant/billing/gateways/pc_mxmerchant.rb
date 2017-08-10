@@ -2,8 +2,8 @@ module ActiveMerchant
   module Billing
     class PcMxmerchantGateway < Gateway
 
-      self.test_url = 'https://sandbox.api.mxmerchant.com/checkout/v3/payment'
-      self.live_url = 'https://api.mxmerchant.com/checkout/v3/payment'
+      self.test_url = 'https://sandbox.api.mxmerchant.com/checkout/v3'
+      self.live_url = 'https://api.mxmerchant.com/checkout/v3'
 
       self.default_currency = 'USD'
       self.money_format = :dollars
@@ -157,6 +157,7 @@ module ActiveMerchant
 
         params[:tenderType] = 'Card'
         params[:cardAccount] = card_account
+        params[:vault] = true
       end
 
       def add_credit_card(params, creditcard, options)
@@ -244,11 +245,16 @@ module ActiveMerchant
 
       def commit(params, options)
         params[:merchantId] = @options[:merchid]
+        token = nil
+        
+        if params.delete(:vault)
+          token = tokenize_card(params)
+        end
 
         if test?
-          url = "#{test_url}?echo=true"
+          url = "#{test_url}/payment?echo=true"
         else
-          url = "#{live_url}?echo=true"
+          url = "#{live_url}/payment?echo=true"
         end
 
         begin
@@ -270,15 +276,15 @@ module ActiveMerchant
           avs_result: {code: AVS_CODE_MAPPING[response.dig('risk', 'avsResponseCode')]},
           cvv_result: CVV_CODE_MAPPING[response.dig('risk', 'cvvResponseCode')],
           error_code: error_code(response, success_from(response)),
-          token: response['paymentToken']
+          token: token
         )
       end
       
       def commit_delete(params)
         if test?
-          url = "#{test_url}/#{params[:id]}"
+          url = "#{test_url}/payment/#{params[:id]}"
         else
-          url = "#{live_url}/#{params[:id]}"
+          url = "#{live_url}/payment/#{params[:id]}"
         end
         
         begin
@@ -294,6 +300,38 @@ module ActiveMerchant
           success,
           message
         )
+      end
+
+      def tokenize_card(params)
+        limited_use_token = get_limited_use_token
+        if test?
+          url = "#{test_url}/vault?token={limited_use_token}"
+        else
+          url = "#{live_url}/vault?token={limited_use_token}"
+        end
+
+        card = params[:cardAccount]
+
+        begin
+          body = card.to_json
+          token = ssl_post(url, body, headers)
+        rescue ResponseError
+          token = nil
+        end
+      end
+
+      def get_limited_use_token
+        if test?
+          url = "#{test_url}/auth/token/#{@options[:merchid]}"
+        else
+          url = "#{live_url}/auth/token/#{@options[:merchid]}"
+        end
+
+        begin
+          limited_use_token = ssl_post(url, nil, headers)
+        rescue ResponseError
+          limited_use_token = nil
+        end
       end
 
       def success_from(response)
