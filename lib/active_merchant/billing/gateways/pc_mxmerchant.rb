@@ -157,7 +157,6 @@ module ActiveMerchant
 
         params[:tenderType] = 'Card'
         params[:cardAccount] = card_account
-        params[:vault] = true
       end
 
       def add_credit_card(params, creditcard, options)
@@ -175,6 +174,7 @@ module ActiveMerchant
 
         params[:tenderType] = 'Card'
         params[:cardAccount] = card_account
+        params[:tokenize] = 'Y'
       end
 
       def add_level2(params, options)
@@ -247,7 +247,7 @@ module ActiveMerchant
         params[:merchantId] = @options[:merchid]
         token = nil
         
-        if params.delete(:vault)
+        if params.delete(:tokenize)
           token = tokenize_card(params)
         end
 
