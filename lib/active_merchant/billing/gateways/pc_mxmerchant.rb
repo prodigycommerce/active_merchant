@@ -174,7 +174,7 @@ module ActiveMerchant
 
         params[:tenderType] = 'Card'
         params[:cardAccount] = card_account
-        params[:tokenize] = 'Y'
+        # params[:tokenize] = 'Y'
       end
 
       def add_level2(params, options)
@@ -314,7 +314,7 @@ module ActiveMerchant
 
         begin
           body = card.to_json
-          token = limited_use_token #parse(ssl_post(vault_url, body, headers))
+          token = ssl_post(vault_url, body, headers)
         rescue ResponseError
           token = nil
         end
