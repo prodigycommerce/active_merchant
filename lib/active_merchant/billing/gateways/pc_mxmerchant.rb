@@ -305,16 +305,16 @@ module ActiveMerchant
       def tokenize_card(params)
         limited_use_token = get_limited_use_token
         if test?
-          url = "#{test_url}/vault?token={limited_use_token}"
+          vault_url = "#{test_url}/vault?token=#{limited_use_token}"
         else
-          url = "#{live_url}/vault?token={limited_use_token}"
+          vault_url = "#{live_url}/vault?token=#{limited_use_token}"
         end
 
         card = params[:cardAccount]
 
         begin
           body = card.to_json
-          token = ssl_post(url, body, headers)
+          token = ssl_post(vault_url, body, headers)
         rescue ResponseError
           token = nil
         end
@@ -322,13 +322,13 @@ module ActiveMerchant
 
       def get_limited_use_token
         if test?
-          url = "#{test_url}/auth/token/#{@options[:merchid]}"
+          token_url = "#{test_url}/auth/token/#{@options[:merchid]}"
         else
-          url = "#{live_url}/auth/token/#{@options[:merchid]}"
+          token_url = "#{live_url}/auth/token/#{@options[:merchid]}"
         end
 
         begin
-          limited_use_token = ssl_post(url, nil, headers)
+          limited_use_token = ssl_post(token_url, nil, headers)
         rescue ResponseError
           limited_use_token = nil
         end
