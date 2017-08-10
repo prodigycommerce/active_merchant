@@ -2,8 +2,8 @@ module ActiveMerchant
   module Billing
     class PcMxmerchantGateway < Gateway
 
-      self.test_url = 'https://sandbox.api.mxmerchant.com/checkout/v3'
-      self.live_url = 'https://api.mxmerchant.com/checkout/v3'
+      self.test_url = 'https://sandbox.api.mxmerchant.com/checkout/v3/payment'
+      self.live_url = 'https://api.mxmerchant.com/checkout/v3/payment'
 
       self.default_currency = 'USD'
       self.money_format = :dollars
@@ -174,7 +174,6 @@ module ActiveMerchant
 
         params[:tenderType] = 'Card'
         params[:cardAccount] = card_account
-        # params[:tokenize] = 'Y'
       end
 
       def add_level2(params, options)
@@ -245,16 +244,16 @@ module ActiveMerchant
 
       def commit(params, options)
         params[:merchantId] = @options[:merchid]
-        token = nil
+        # token = nil
         
-        if params.delete(:tokenize)
-          token = tokenize_card(params)
-        end
+        # if params.delete(:tokenize)
+        #   token = tokenize_card(params)
+        # end
 
         if test?
-          url = "#{test_url}/payment?echo=true"
+          url = "#{test_url}?echo=true"
         else
-          url = "#{live_url}/payment?echo=true"
+          url = "#{live_url}?echo=true"
         end
 
         begin
@@ -276,15 +275,15 @@ module ActiveMerchant
           avs_result: {code: AVS_CODE_MAPPING[response.dig('risk', 'avsResponseCode')]},
           cvv_result: CVV_CODE_MAPPING[response.dig('risk', 'cvvResponseCode')],
           error_code: error_code(response, success_from(response)),
-          token: token
+          token: response['paymentToken']
         )
       end
       
       def commit_delete(params)
         if test?
-          url = "#{test_url}/payment/#{params[:id]}"
+          url = "#{test_url}/#{params[:id]}"
         else
-          url = "#{live_url}/payment/#{params[:id]}"
+          url = "#{live_url}/#{params[:id]}"
         end
         
         begin
