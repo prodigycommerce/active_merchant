@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(post, money, options)
-        post[:value] = amount(money)
+        post[:value] = localized_amount(money, options[:currency])
         post[:trackId] = options[:order_id]
         post[:currency] = options[:currency] || currency(money)
         post[:descriptor] = {}
@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["responseCode"] == "10000" || response["responseCode"] == "10100"
+        (response["responseCode"] == "10000" && !response["responseMessage"].start_with?("40")) || response["responseCode"] == "10100"
       end
 
       def message_from(succeeded, response)
