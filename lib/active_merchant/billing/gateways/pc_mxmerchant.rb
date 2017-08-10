@@ -314,7 +314,7 @@ module ActiveMerchant
 
         begin
           body = card.to_json
-          token = parse(ssl_post(vault_url, body, headers))
+          token = limited_use_token #parse(ssl_post(vault_url, body, headers))
         rescue ResponseError
           token = nil
         end
@@ -328,7 +328,7 @@ module ActiveMerchant
         end
 
         begin
-          limited_use_token = parse(ssl_post(token_url, nil, headers))
+          limited_use_token = ssl_post(token_url, nil, headers)
         rescue ResponseError
           limited_use_token = nil
         end
