@@ -10,7 +10,7 @@ module ActiveMerchant
     MAX_RETRIES = 3
     OPEN_TIMEOUT = 60
     READ_TIMEOUT = 60
-    VERIFY_PEER = true
+    VERIFY_PEER = false
     CA_FILE = File.expand_path('../certs/cacert.pem', File.dirname(__FILE__))
     CA_PATH = nil
     RETRY_SAFE = false
