@@ -244,11 +244,6 @@ module ActiveMerchant
 
       def commit(params, options)
         params[:merchantId] = @options[:merchid]
-        # token = nil
-        
-        # if params.delete(:tokenize)
-        #   token = tokenize_card(params)
-        # end
 
         if test?
           url = "#{test_url}?echo=true"
@@ -299,38 +294,6 @@ module ActiveMerchant
           success,
           message
         )
-      end
-
-      def tokenize_card(params)
-        limited_use_token = get_limited_use_token
-        if test?
-          vault_url = "#{test_url}/vault?token=#{limited_use_token}"
-        else
-          vault_url = "#{live_url}/vault?token=#{limited_use_token}"
-        end
-
-        card = params[:cardAccount]
-
-        begin
-          body = card.to_json
-          token = ssl_post(vault_url, body, headers)
-        rescue ResponseError
-          token = nil
-        end
-      end
-
-      def get_limited_use_token
-        if test?
-          token_url = "#{test_url}/auth/token/#{@options[:merchid]}"
-        else
-          token_url = "#{live_url}/auth/token/#{@options[:merchid]}"
-        end
-
-        begin
-          limited_use_token = ssl_post(token_url, nil, headers)
-        rescue ResponseError
-          limited_use_token = nil
-        end
       end
 
       def success_from(response)
