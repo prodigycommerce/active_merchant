@@ -123,7 +123,7 @@ module ActiveMerchant
 
       def scrub(transcript)
         transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((Authorization: Basic )\w+), '\1FILTERED]').
           gsub(%r((\\?"number\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?"cvv\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?"merchid\\?":\\?")\d+), '\1[FILTERED]')
@@ -132,7 +132,7 @@ module ActiveMerchant
       private
 
       def add_invoice(params, options)
-        params[:invoice] = options[:order_id][0,8]
+        params[:invoice] = options[:order_id][0,8] if options[:order_id]
       end
 
       def add_payment_method(params, payment_method, options)
