@@ -10,7 +10,7 @@ module ActiveMerchant
     MAX_RETRIES = 3
     OPEN_TIMEOUT = 60
     READ_TIMEOUT = 60
-    VERIFY_PEER = false
+    VERIFY_PEER = true
     CA_FILE = File.expand_path('../certs/cacert.pem', File.dirname(__FILE__))
     CA_PATH = nil
     RETRY_SAFE = false
@@ -43,7 +43,7 @@ module ActiveMerchant
       @ca_path      = CA_PATH
       @max_retries  = MAX_RETRIES
       @ignore_http_status = false
-      @ssl_version = nil
+      @ssl_version = :TLSv1_2 #nil
       @proxy_address = nil
       @proxy_port = nil
     end
