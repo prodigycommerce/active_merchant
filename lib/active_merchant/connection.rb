@@ -43,7 +43,7 @@ module ActiveMerchant
       @ca_path      = CA_PATH
       @max_retries  = MAX_RETRIES
       @ignore_http_status = false
-      @ssl_version = :TLSv1_2 #nil
+      @ssl_version = nil
       @proxy_address = nil
       @proxy_port = nil
     end
