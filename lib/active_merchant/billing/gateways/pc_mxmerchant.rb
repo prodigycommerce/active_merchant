@@ -336,6 +336,8 @@ module ActiveMerchant
         begin
           body = card.to_json
           raw_response = ssl_post(url, body, headers)
+          parsed_response = parse("[#{raw_response}]")[0]
+          puts "parsed token response: #{parsed_response}"
           token = parse("[#{raw_response}]")[0]
         rescue ResponseError
           token = nil
@@ -396,7 +398,6 @@ module ActiveMerchant
         auth = Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}").strip
         {
           'Content-Type' => 'application/json',
-          'Accept' => 'application/json',
           'Authorization'  => 'Basic ' + auth,
         }
       end
