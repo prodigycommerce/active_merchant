@@ -303,6 +303,7 @@ module ActiveMerchant
         limited_use_token = get_limited_use_token
         if test?
           url = "#{test_url}/vault?token=#{limited_use_token}"
+          puts "sending request to vault card to: #{url}"
         else
           url = "#{live_url}/vault?token=#{limited_use_token}"
         end
@@ -312,6 +313,7 @@ module ActiveMerchant
         begin
           body = card.to_json
           token = ssl_post(url, body, headers)
+          puts "Token received: #{token}"
         rescue ResponseError
           token = nil
         end
