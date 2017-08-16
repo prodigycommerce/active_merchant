@@ -329,7 +329,7 @@ module ActiveMerchant
         end
 
         begin
-          limited_use_token = ssl_post(url, nil, headers)
+          limited_use_token = parse(ssl_post(url, nil, headers))
         rescue ResponseError
           limited_use_token = nil
         end
