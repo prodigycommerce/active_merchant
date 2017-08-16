@@ -301,6 +301,7 @@ module ActiveMerchant
         Response.new(
           success,
           message,
+          nil,
           test: test?
         )
       end
@@ -320,6 +321,7 @@ module ActiveMerchant
         Response.new(
           success,
           message,
+          nil,
           test: test?,
           token: token
         )
