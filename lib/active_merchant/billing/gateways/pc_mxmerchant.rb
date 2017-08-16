@@ -111,10 +111,7 @@ module ActiveMerchant
       end
 
       def verify(creditcard, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, creditcard, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        
       end
 
       def supports_scrubbing?
@@ -323,12 +320,14 @@ module ActiveMerchant
       def get_limited_use_token
         if test?
           url = "#{test_url}/auth/token/#{@options[:merchid]}"
+          puts "sending request for limited use token to: #{url}"
         else
           url = "#{live_url}/auth/token/#{@options[:merchid]}"
         end
 
         begin
           limited_use_token = ssl_post(url, nil, headers)
+          puts "limited use token received: #{limited_use_token}"
         rescue ResponseError
           limited_use_token = nil
         end
