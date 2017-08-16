@@ -301,6 +301,7 @@ module ActiveMerchant
       
       def tokenize_card(params)
         limited_use_token = get_limited_use_token
+        puts "limited use token: #{limited_use_token}"
         if test?
           url = "#{test_url}/vault?token=#{limited_use_token}"
           puts "sending request to vault card to: #{url}"
