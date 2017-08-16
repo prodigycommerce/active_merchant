@@ -396,6 +396,7 @@ module ActiveMerchant
         auth = Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}").strip
         {
           'Content-Type' => 'application/json',
+          'Accept' => 'application/json',
           'Authorization'  => 'Basic ' + auth,
         }
       end
