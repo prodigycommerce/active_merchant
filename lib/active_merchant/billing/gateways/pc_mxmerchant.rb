@@ -300,13 +300,13 @@ module ActiveMerchant
 
         Response.new(
           success,
-          message
+          message,
+          test: test?
         )
       end
 
       def commit_verify(params)
         token = tokenize_card(params)
-        puts "token received: #{token}"
 
         if token
           success = true
@@ -320,7 +320,8 @@ module ActiveMerchant
         Response.new(
           success,
           message,
-          token
+          test: test?,
+          token: token
         )
       end
 
@@ -340,8 +341,8 @@ module ActiveMerchant
           token = parse("[#{raw_response}]")[0]
         rescue ResponseError
           token = nil
-        #rescue JSON::ParserError
-        #  token = nil
+        rescue JSON::ParserError
+          token = nil
         end
       end
 
@@ -357,8 +358,8 @@ module ActiveMerchant
           limited_use_token = parse("[#{raw_response}]")[0]
         rescue ResponseError
           limited_use_token = nil
-        #rescue JSON::ParserError
-        #  limited_use_token = nil
+        rescue JSON::ParserError
+          limited_use_token = nil
         end
       end
 
