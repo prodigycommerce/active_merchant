@@ -111,7 +111,12 @@ module ActiveMerchant
       end
 
       def verify(creditcard, options = {})
+        params = {}
         
+        add_invoice(params, options)
+        add_credit_card(params, creditcard, options)
+        
+        commit_verify(params)
       end
 
       def supports_scrubbing?
@@ -298,7 +303,26 @@ module ActiveMerchant
           message
         )
       end
-      
+
+      def commit_verify(params)
+        token = tokenize_card(params)
+
+        if token
+          success = true
+          message = "Approved"
+          token = token
+        else
+          success = false
+          message = "Declined"
+        end
+
+        Response.new(
+          success,
+          message,
+          token
+        )
+      end
+
       def tokenize_card(params)
         limited_use_token = get_limited_use_token
         if test?
@@ -315,6 +339,8 @@ module ActiveMerchant
           token = parse("[#{raw_response}]")[0]
         rescue ResponseError
           token = nil
+        rescue JSON::ParserError
+          token = nil
         end
       end
 
@@ -329,6 +355,8 @@ module ActiveMerchant
           raw_response = ssl_post(url, nil, headers)
           limited_use_token = parse("[#{raw_response}]")[0]
         rescue ResponseError
+          limited_use_token = nil
+        rescue JSON::ParserError
           limited_use_token = nil
         end
       end
