@@ -147,7 +147,7 @@ module ActiveMerchant
 
       def add_token(params, token, options)
         card_account = {}
-        address= options[:billing_address]
+        address = options[:billing_address]
 
         card_account[:name] = token[:cardholder_name]
         card_account[:token] = token[:token]
