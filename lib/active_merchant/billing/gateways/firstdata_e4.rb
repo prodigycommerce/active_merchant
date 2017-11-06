@@ -141,9 +141,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript.
-          gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2').
-          gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
+        transcript
+          .gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2')
+          .gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
+          .gsub(%r((<CAVV>).+(</CAVV>)), '\1[FILTERED]\2')
       end
 
       def supports_network_tokenization?
@@ -237,7 +238,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! "CardType", card_type(credit_card.brand)
 
           eci = (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
-          xml.tag! "Ecommerce_Flag", eci
+          xml.tag! "Ecommerce_Flag", eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
 
           add_credit_card_verification_strings(xml, credit_card, options)
         end

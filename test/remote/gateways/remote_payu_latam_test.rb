@@ -2,7 +2,7 @@ require "test_helper"
 
 class RemotePayuLatamTest < Test::Unit::TestCase
   def setup
-    @gateway = PayuLatamGateway.new(fixtures(:payu_latam))
+    @gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(payment_country: 'AR'))
 
     @amount = 4000
     @credit_card = credit_card("4097440000000004", verification_value: "444", first_name: "APPROVED", last_name: "")
@@ -11,13 +11,11 @@ class RemotePayuLatamTest < Test::Unit::TestCase
 
     @options = {
       dni_number: '5415668464654',
-      dni_type: 'TI',
       currency: "ARS",
       order_id: generate_unique_id,
       description: "Active Merchant Transaction",
       installments_number: 1,
       tax: 0,
-      tax_return_base: 0,
       email: "username@domain.com",
       ip: "127.0.0.1",
       device_session_id: 'vghs6tvkcle931686k1900o6e1',
@@ -51,10 +49,10 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_brazil
+  def test_successul_purchase_with_buyer
     gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => "512327"))
 
-    options_brazil = {
+    options_buyer = {
       currency: "BRL",
       billing_address: address(
         address1: "Calle 100",
@@ -73,7 +71,49 @@ class RemotePayuLatamTest < Test::Unit::TestCase
         country: "BR",
         zip: "01019-030",
         phone: "(11)756312633"
-      )
+      ),
+      buyer: {
+        name: 'Jorge Borges',
+        dni_number: '5415668464123',
+        dni_type: 'TI',
+        cnpj: '32593371000110',
+        email: 'axaxaxas@mlo.org'
+      }
+    }
+
+    response = gateway.purchase(@amount, @credit_card, @options.update(options_buyer))
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_brazil
+    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => "512327"))
+
+    options_brazil = {
+      payment_country: "BR",
+      currency: "BRL",
+      billing_address: address(
+        address1: "Calle 100",
+        address2: "BL4",
+        city: "Sao Paulo",
+        state: "SP",
+        country: "BR",
+        zip: "09210710",
+        phone: "(11)756312633"
+      ),
+      shipping_address: address(
+        address1: "Calle 200",
+        address2: "N107",
+        city: "Sao Paulo",
+        state: "SP",
+        country: "BR",
+        zip: "01019-030",
+        phone: "(11)756312633"
+      ),
+      buyer:{
+        cnpj: "32593371000110"
+      }
     }
 
     response = gateway.purchase(@amount, @credit_card, @options.update(options_brazil))
@@ -82,8 +122,68 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_sans_options
-    response = @gateway.purchase(@amount, @credit_card)
+  def test_successful_purchase_colombia
+    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => "512321"))
+
+    options_colombia = {
+      payment_country: "CO",
+      currency: "COP",
+      billing_address: address(
+        address1: "Calle 100",
+        address2: "BL4",
+        city: "Bogota",
+        state: "Bogota DC",
+        country: "CO",
+        zip: "09210710",
+        phone: "(11)756312633"
+      ),
+      shipping_address: address(
+        address1: "Calle 200",
+        address2: "N107",
+        city: "Bogota",
+        state: "Bogota DC",
+        country: "CO",
+        zip: "01019-030",
+        phone: "(11)756312633"
+      ),
+      tx_tax: '3193',
+      tx_tax_return_base: '16806'
+    }
+
+    response = gateway.purchase(@amount, @credit_card, @options.update(options_colombia))
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_mexico
+    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => "512324"))
+
+    options_mexico = {
+      payment_country: "MX",
+      currency: "MXN",
+      billing_address: address(
+        address1: "Calle 100",
+        address2: "BL4",
+        city: "Guadalajara",
+        state: "Jalisco",
+        country: "MX",
+        zip: "09210710",
+        phone: "(11)756312633"
+      ),
+      shipping_address: address(
+        address1: "Calle 200",
+        address2: "N107",
+        city: "Guadalajara",
+        state: "Jalisco",
+        country: "MX",
+        zip: "01019-030",
+        phone: "(11)756312633"
+      ),
+      birth_date: '1985-05-25'
+    }
+
+    response = gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
     assert_success response
     assert_equal "APPROVED", response.message
     assert response.test?
@@ -94,6 +194,12 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_failure response
     assert_equal "ANTIFRAUD_REJECTED", response.message
     assert_equal "DECLINED", response.params["transactionResponse"]["state"]
+  end
+
+  def test_failed_purchase_with_no_options
+    response = @gateway.purchase(@amount, @declined_card, {})
+    assert_failure response
+    assert_equal "ANTIFRAUD_REJECTED", response.message
   end
 
   def test_successful_authorize
@@ -121,7 +227,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_match /property: parentTransactionId, message: must not be null/, response.message
+    assert_match (/property: parentTransactionId, message: must not be null/), response.message
   end
 
   def test_successful_void
@@ -136,7 +242,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_match /property: parentTransactionId, message: must not be null/, response.message
+    assert_match (/property: parentTransactionId, message: must not be null/), response.message
   end
 
   def test_successful_authorize_and_capture
@@ -151,7 +257,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_match /must not be null/, response.message
+    assert_match (/must not be null/), response.message
   end
 
   def test_verify_credentials

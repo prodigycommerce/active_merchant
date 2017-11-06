@@ -18,9 +18,27 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-
     assert_equal 'charge_test_941CA9CE174U76BD29C8', response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_includes_avs_result
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_equal 'S', response.avs_result["code"]
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result["message"]
+    assert_equal 'X', response.avs_result["postal_match"]
+    assert_equal 'X', response.avs_result["street_match"]
+  end
+
+  def test_successful_purchase_includes_cvv_result
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_equal 'Y', response.cvv_result["code"]
   end
 
   def test_purchase_with_additional_fields
@@ -149,6 +167,9 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_match %r{Invalid JSON response}, response.message
   end
 
+  def test_supported_countries
+    assert_equal ['AD', 'AE', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA'], @gateway.supported_countries
+  end
 
   private
 

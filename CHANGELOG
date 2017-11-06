@@ -1,11 +1,82 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Stripe: Add support for statement_address parameters for EMV transactions [malcolm-mergulhao] #2524
-* Vantiv (Litle): Pass 3DS fields [curiousepic] #2536
+* FirstData E4 (Payeezy): Ensure numeric ECI values are zero padded [jasonwebster] #2630
+* Barclaycard Smartpay: Extra data fields for credits [bpollack] #2631
+* PayU Latam: Adds `partnerID`, adjusts phone preferences, allows empty `ip_address`, and adjusts for no `cvv` [deedeelavinder] #2634
+* Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
+* Ebanx: Pass fields for business person responsible [curiousepic] #2635
+* Ebanx: Support Colombian transactions [bpollack] #2636
+* Sage Payment Solutions: Scrub check info [curiousepic] #2639
+* Worldbank US: Allow using the backup URL [bpollack] #2641
+
+== Version 1.74.0 (October 24, 2017)
+* Adyen: Update list of supported countries [dtykocki] #2600
+* Authorize.net CIM: Handle multiple error messages [amandapuff] #2537
+* Barclaycard Smartpay: Pass street and house_number fields, in addition to standard address [deedeelavinder] #2603
+* Barclaycard Smartpay: Use authorization pspReference for refunds [davidsantoso] #2599
+* Beanstream: Pass email fields without address [curiousepic] #2615
+* Beanstream: Support recurringPayment for auth, capture, and purchase transactions [dtykocki] #2617
+* Borgun: Add support for USD transactions [dtykocki] #2602
+* Borgun: Include currency code from split authorization for voids [dtykocki] #2605
+* Checkout V2: Expose AVS and CVV results for purchases [dtykocki] #2619
+* Credorax: Update response codes [curiousepic] #2595
+* CyberSource: Support 3DSecure requests [curiousepic] #2624
+* Ebanx: Pass person_type and name for stored cards [curiousepic] #2621
+* Ebanx: Support Store and person_type option [curiousepic] #2604
+* Elavon: Update endpoint URLs [curiousepic] #2608
+* Netbanx: Fix basic auth by sending the account_number and api_key [anotherjosmith] #2616
+* Payeezy: Adds support for store [deedeelavinder] #2591
+* PayU Latam: Set payment_country gateway attribute [curiousepic] #2611
+* Redsys: Support the DKK currency type [bpollack] #2618
+* WePay: Only send ip and device for non-recurring transactions [dtykocki] #2597
+
+== Version 1.73.0 (September 28, 2017)
+* Adyen: Use original authorization pspReference on Refunds [lyverovski] #2589
+* Braintree Blue: Explicitly require braintree-ruby version 2.78 [anotherjosmith]
+* FirstData E4: Scrub 3DS cryptogram [jasonwebster] #2596
+* PayHub: Replace single quotes with double quotes in error message [matthewheath] #2572
+* Wirecard: Format non-fractional currency amounts correctly [bdewater] #2594
+
+== Version 1.72.0 (September 20, 2017)
+* Adyen: Fix failing remote tests [dtykocki] #2584
+* Authorize.net: Remove numeric restriction on customer ID [dtykocki] #2579
+* Authorize.net: Restore default state value for non-US addresses [jasonwebster] #2563
+* Beanstream: Do not default state and zip with empty country [dtykocki] #2582
+* Braintree Blue: Add eci_indicator field for Apple Pay [davidsantoso] #2565
+* Conekta: Add guard clause for details fallbacks [curiousepic] #2573
+* Conekta: Pull required details from billing address [nfarve] #2568
+* DataCash: Enable refunding recurring transactions [davidsantoso] #2560
+* Ebanx: Adds Brazil Specific Parameters [nfarve] #2559
+* Kushki: Add support for refunds [dtykocki] #2575
+* MercadoPago: Additional tweaks for transaction requests [davidsantoso]
+* MercadoPago: Default to alphanumeric order_id [davidsantoso]
+* MercadoPago: Send diners_club cards as diners [davidsantoso] #2585
+* PayU Latam: Correctly condition buyer element fields [curiousepic] #2578
+* PayU Latam: Pass unique buyer fields and country requirements [curiousepic] #2570
+* Qvalent: Support general credit [curiousepic] #2558
+* SafeCharge: Update to Version 4.1.0 [nfarve] #2556
+* WePay: Don't default API version header [curiousepic] #2567
+* WePay: Don't require email for Store [curiousepic] #2588
+
+== Version 1.71.0 (August 22, 2017)
+* Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551
 * Checkout V2: Add localized_amount support to add_invoice function [nicolas-maalouf-cko] #2452
+* Checkout V2: Add UAE to country list [shasum] #2548
 * Checkout V2: Fix success response code validation [nicolas-maalouf-cko] #2452
+* CreditCall: Only allow AVS when specified [curiousepic] #2549
+* CreditCall: Parse additional params from responses [nfarve] #2552
+* CreditCall: Parse more response params [nfavre] #2543
+* MercadoPago: Small tweaks to building requests [davidsantoso] #2555
+* Orbital: Support Network Tokenization Credit Cards [curiousepic] #2553
+* Orbital: Updgrade schema version to 7.1 [curiousepic] #2546
 * Remove HUF from default non-fractional currencies [curiousepic] #2538
+* Stripe: Add support for statement_address parameters for EMV transactions [malcolm-mergulhao] #2524
+* TransFirst Express: Don't send address2 without value [nfarve] #2545
+* TransFirst Express: Fix Optional Fields Being Passed Blank [nfarve] #2550
+* TransFirst: Fix partial refund [nfarve] #2541
+* Vantiv (Litle): Pass 3DS fields [curiousepic] #2536
+* Braintree Blue: Add phone to options [deedeelavinder] #2564
 
 == Version 1.70.0 (August 4, 2017)
 * Barclaycard Smartpay: Provider a default billing address house number [nfarve] #2520
@@ -1735,7 +1806,7 @@ value [jduff]
 * Support default Return class for all Integrations that don't use returns [Soleone]
 * Add support for passing additional options when creating a Notification to all Integrations [Soleone]
 * Update BraintreeBlue#refund to have consistent method signature [Jonathan Rudenberg]
-* Add rails/init.rb for gem campatability in Rails [Rūdolfs Ošiņš]
+* Add rails/init.rb for gem campatability in Rails [R?dolfs O?i??]
 * Fix Paypal Express response parser [Jonathan Rudenberg]
 * Braintree/Transax: Add tax field [wisq]
 
@@ -2051,7 +2122,7 @@ value [jduff]
 * Update Secure Pay Au to meet specs for MessageInfo elements [cody]
 * Add support for the Australian Secure Pay payment gateway [cody]
 * Allow LinkPoint cancellations for recurring billing. [yanagimoto.shin]
-* Add support for Åland Islands to the country list [cody]
+* Add support for ?land Islands to the country list [cody]
 
 == Version 1.3.1 (January 28, 2008)
 

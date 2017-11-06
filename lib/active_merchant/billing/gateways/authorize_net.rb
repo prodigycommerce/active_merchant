@@ -535,7 +535,7 @@ module ActiveMerchant
 
       def add_customer_data(xml, payment_source, options)
         xml.customer do
-          xml.id(options[:customer]) unless empty?(options[:customer]) || options[:customer] !~ /^\d+$/
+          xml.id(options[:customer]) unless empty?(options[:customer]) || options[:customer] !~ /^\w+$/
           xml.email(options[:email]) unless empty?(options[:email])
         end
 
@@ -719,7 +719,7 @@ module ActiveMerchant
         if ["US", "CA"].include?(address[:country])
           address[:state] || 'NC'
         else
-          address[:state]
+          address[:state] || 'n/a'
         end
       end
 
