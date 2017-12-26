@@ -194,7 +194,7 @@ module ActiveMerchant
 
         params[:departmentName] = "Purchasing"
         params[:discountAmount] = level3[:discount_amount]
-        params[:dutyAmount] = level3[:duty_amount]
+        params[:dutyAmount] = '0.00'
         params[:shipAmount] = level3[:shipping_amount]
         params[:shipToZip] = level3[:ship_to_zip]
         params[:shipToCountry] = level3[:ship_to_country]

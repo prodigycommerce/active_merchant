@@ -156,7 +156,7 @@ module ActiveMerchant
         return unless level3
 
         params[:frtamnt] = level3[:shipping_amount]
-        params[:dutyamnt] =  level3[:duty_amount]
+        params[:dutyamnt] =  '0.00'
         params[:shiptozip] = level3[:ship_to_zip]
         params[:shipfromzip] = level3[:ship_from_zip]
         params[:shiptocountry] = level3[:ship_to_country]
