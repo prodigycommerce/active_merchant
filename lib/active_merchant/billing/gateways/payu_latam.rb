@@ -29,9 +29,8 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options={})
-        requires!(options, :merchant_id, :account_id, :api_login, :api_key)
+        requires!(options, :merchant_id, :account_id, :api_login, :api_key, :payment_country)
         super
-        @options[:payment_country] ||= options[:payment_country] if options[:payment_country]
       end
 
       def purchase(amount, payment_method, options={})
@@ -78,7 +77,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         minimum = MINIMUMS[options[:currency].upcase] if options[:currency]
-        amount = minimum || 100
+        amount = options[:verify_amount] || minimum || 100
 
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(amount, credit_card, options) }
@@ -139,7 +138,7 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction_elements(post, type, options)
         transaction = {}
-        transaction[:paymentCountry] = @options[:payment_country] || (options[:billing_address][:country] if options[:billing_address])
+        transaction[:paymentCountry] = @options[:payment_country]
         transaction[:type] = type
         transaction[:ipAddress] = options[:ip] || ''
         transaction[:userAgent] = options[:user_agent] if options[:user_agent]
@@ -151,9 +150,9 @@ module ActiveMerchant #:nodoc:
       def add_order(post, options)
         order = {}
         order[:accountId] = @options[:account_id]
-        order[:partnerId] = options[:partnerId] if options[:partnerId]
+        order[:partnerId] = options[:partner_id] if options[:partner_id]
         order[:referenceCode] = options[:order_id] || generate_unique_id
-        order[:description] = options[:description] || 'unspecified'
+        order[:description] = options[:description] || 'Compra en ' + @options[:merchant_id]
         order[:language] = 'en'
         order[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         post[:transaction][:order] = order
@@ -167,7 +166,7 @@ module ActiveMerchant #:nodoc:
         payer[:dniNumber] = options[:dni_number] if options[:dni_number]
         payer[:dniType] = options[:dni_type] if options[:dni_type]
         payer[:emailAddress] = options[:email] if options[:email]
-        payer[:birthdate] = options[:birth_date] if options[:birth_date] && options[:payment_country] == 'MX'
+        payer[:birthdate] = options[:birth_date] if options[:birth_date] && @options[:payment_country] == 'MX'
         payer[:billingAddress] = billing_address_fields(options)
         post[:transaction][:payer] = payer
       end
@@ -180,7 +179,7 @@ module ActiveMerchant #:nodoc:
         billing_address[:city] = address[:city]
         billing_address[:state] = address[:state]
         billing_address[:country] = address[:country]
-        billing_address[:postalCode] = address[:zip] if options[:payment_country] == 'MX'
+        billing_address[:postalCode] = address[:zip] if @options[:payment_country] == 'MX'
         billing_address[:phone] = address[:phone]
         billing_address
       end
@@ -191,7 +190,7 @@ module ActiveMerchant #:nodoc:
           buyer[:fullName] = buyer_hash[:name]
           buyer[:dniNumber] = buyer_hash[:dni_number]
           buyer[:dniType] = buyer_hash[:dni_type]
-          buyer[:cnpj] = buyer_hash[:cnpj] if options[:payment_country] == 'BR'
+          buyer[:cnpj] = buyer_hash[:cnpj] if @options[:payment_country] == 'BR'
           buyer[:emailAddress] = buyer_hash[:email]
           buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
           buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
@@ -199,7 +198,7 @@ module ActiveMerchant #:nodoc:
           buyer[:fullName] = payment_method.name.strip
           buyer[:dniNumber] = options[:dni_number]
           buyer[:dniType] = options[:dni_type]
-          buyer[:cnpj] = options[:cnpj] if options[:payment_country] == 'BR'
+          buyer[:cnpj] = options[:cnpj] if @options[:payment_country] == 'BR'
           buyer[:emailAddress] = options[:email]
           buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
           buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
@@ -235,8 +234,8 @@ module ActiveMerchant #:nodoc:
 
         additional_values = {}
         additional_values[:TX_VALUE] = tx_value
-        additional_values[:TX_TAX] = tx_tax if options[:payment_country] == 'CO'
-        additional_values[:TX_TAX_RETURN_BASE] = tx_tax_return_base if options[:payment_country] == 'CO'
+        additional_values[:TX_TAX] = tx_tax if @options[:payment_country] == 'CO'
+        additional_values[:TX_TAX_RETURN_BASE] = tx_tax_return_base if @options[:payment_country] == 'CO'
 
         post[:transaction][:order][:additionalValues] = additional_values
       end
@@ -358,7 +357,7 @@ module ActiveMerchant #:nodoc:
           response["code"] == "SUCCESS" && response["creditCardToken"] && response["creditCardToken"]["creditCardTokenId"].present?
         when 'verify_credentials'
           response["code"] == "SUCCESS"
-        when 'refund'
+        when 'refund', 'void'
         response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "PENDING" || response["transactionResponse"]["state"] == "APPROVED")
         else
           response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "APPROVED")
@@ -375,8 +374,10 @@ module ActiveMerchant #:nodoc:
           return "VERIFIED" if success
           "FAILED"
         else
-          response_message = response["transactionResponse"]["responseMessage"] if response["transactionResponse"]
-          response_code = response["transactionResponse"]["responseCode"] if response["transactionResponse"]
+          if response["transactionResponse"]
+            response_message = response["transactionResponse"]["responseMessage"]
+            response_code = response["transactionResponse"]["responseCode"] || response["transactionResponse"]["pendingReason"]
+          end
           return response_code if success
           response["error"] || response_message || response_code || "FAILED"
         end
