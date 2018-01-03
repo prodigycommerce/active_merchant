@@ -1,7 +1,6 @@
 module ActiveMerchant
   module Billing
     class PcMxmerchantGateway < Gateway
-
       self.test_url = 'https://sandbox.api.mxmerchant.com/checkout/v3'
       self.live_url = 'https://api.mxmerchant.com/checkout/v3'
 
@@ -9,11 +8,11 @@ module ActiveMerchant
       self.money_format = :dollars
       self.supported_countries = ['US']
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'http://www.mxmerchant.com'
       self.display_name = 'MX Merchant'
-      
+
       AVS_CODE_MAPPING = {
         '0' => 'D',
         '1' => 'C',
@@ -38,8 +37,8 @@ module ActiveMerchant
         'X' => 'X',
         'Y' => 'Y',
         'Z' => 'Z'
-       }
-      
+      }.freeze
+
       CVV_CODE_MAPPING = {
         '0' => 'M',
         '1' => 'N',
@@ -52,7 +51,7 @@ module ActiveMerchant
         'S' => 'S',
         'U' => 'U',
         'X' => 'X'
-      }
+      }.freeze
 
       def initialize(options = {})
         requires!(options, :username, :password, :merchid)
@@ -72,7 +71,7 @@ module ActiveMerchant
       end
 
       def authorize(amount, payment_method, options = {})
-        params = {authOnly: true}
+        params = { authOnly: true }
 
         add_invoice(params, options)
         add_payment_method(params, payment_method, options)
@@ -84,7 +83,7 @@ module ActiveMerchant
       end
 
       def capture(amount, authorization, options = {})
-        params = {authOnly: false, tenderType: 'Card'}
+        params = { authOnly: false, tenderType: 'Card' }
 
         add_authorization_authcode(params, authorization)
         add_authorization_token(params, authorization)
@@ -94,7 +93,7 @@ module ActiveMerchant
       end
 
       def refund(amount, authorization, options = {})
-        params = {tenderType: 'Card'}
+        params = { tenderType: 'Card' }
 
         add_authorization_token(params, authorization)
         add_refund_amount(params, amount, options)
@@ -102,7 +101,7 @@ module ActiveMerchant
         commit(params, options)
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         params = {}
 
         add_authorization_id(params, authorization)
@@ -112,10 +111,10 @@ module ActiveMerchant
 
       def verify(creditcard, options = {})
         params = {}
-        
+
         add_invoice(params, options)
         add_credit_card(params, creditcard, options)
-        
+
         commit_verify(params)
       end
 
@@ -124,17 +123,17 @@ module ActiveMerchant
       end
 
       def scrub(transcript)
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1FILTERED]').
-          gsub(%r((\\?"number\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r((\\?"cvv\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r((\\?"merchid\\?":\\?")\d+), '\1[FILTERED]')
+        transcript
+          .gsub(/(Authorization: Basic )\w+/, '\1FILTERED]')
+          .gsub(/(\\?"number\\?":\\?")\d+/, '\1[FILTERED]')
+          .gsub(/(\\?"cvv\\?":\\?")\d+/, '\1[FILTERED]')
+          .gsub(/(\\?"merchid\\?":\\?")\d+/, '\1[FILTERED]')
       end
 
       private
 
       def add_invoice(params, options)
-        params[:invoice] = options[:order_id][0,8] if options[:order_id]
+        params[:invoice] = options[:order_id][0, 8] if options[:order_id]
       end
 
       def add_payment_method(params, payment_method, options)
@@ -151,7 +150,7 @@ module ActiveMerchant
 
         card_account[:name] = token[:cardholder_name]
         card_account[:token] = token[:token]
-        card_account[:expiryMonth] = token[:exp_date][0,2]
+        card_account[:expiryMonth] = token[:exp_date][0, 2]
         card_account[:expiryYear] = token[:exp_date][-2..-1]
         card_account[:avsZip] = address[:zip] if address[:zip]
         card_account[:avsStreet] = address[:address1] if address[:address1]
@@ -192,7 +191,7 @@ module ActiveMerchant
         level3 = options[:level3]
         return unless level3
 
-        params[:departmentName] = "Purchasing"
+        params[:departmentName] = 'Purchasing'
         params[:discountAmount] = level3[:discount_amount]
         params[:dutyAmount] = '0.00'
         params[:shipAmount] = level3[:shipping_amount]
@@ -201,34 +200,34 @@ module ActiveMerchant
         params[:purchases] = []
         level3[:line_items].each do |item|
           params[:purchases] <<
-          {
-            :description => item[:description],
-            :quantity => item[:quantity],
-            :code => item[:commodity_code],
-            :unitPrice => item[:price],
-            :unitOfMeasure => item[:unit_of_measure],
-            :extendedAmount => item[:line_total]
-          }
+            {
+              description: item[:description],
+              quantity: item[:quantity],
+              code: item[:commodity_code],
+              unitPrice: item[:price],
+              unitOfMeasure: item[:unit_of_measure],
+              extendedAmount: item[:line_total]
+            }
         end
       end
 
-      def add_amount(params, money, options)
+      def add_amount(params, money, _options)
         params[:amount] = amount(money)
       end
 
-      def add_refund_amount(params, money, options)
+      def add_refund_amount(params, money, _options)
         refund_amount = amount(money)
         params[:amount] = "-#{refund_amount}"
       end
 
       def add_authorization_authcode(params, authorization)
-        id, authcode, token, _ = authorization.split('|')
+        id, authcode, token, = authorization.split('|')
 
         params[:authCode] = authcode
       end
 
       def add_authorization_token(params, authorization)
-        id, authcode, token, _ = authorization.split('|')
+        id, authcode, token, = authorization.split('|')
 
         card_account = {}
         card_account[:token] = token
@@ -236,7 +235,7 @@ module ActiveMerchant
       end
 
       def add_authorization_id(params, authorization)
-        id, authcode, token, _ = authorization.split('|')
+        id, authcode, token, = authorization.split('|')
 
         params[:id] = id
       end
@@ -245,19 +244,17 @@ module ActiveMerchant
         tax_amount.to_f == 0
       end
 
-      def commit(params, options)
+      def commit(params, _options)
         params[:merchantId] = @options[:merchid]
         token = nil
 
-        if params.delete(:tokenize)
-          token = tokenize_card(params)
-        end
+        token = tokenize_card(params) if params.delete(:tokenize)
 
-        if test?
-          url = "#{test_url}/payment?echo=true"
-        else
-          url = "#{live_url}/payment?echo=true"
-        end
+        url = if test?
+                "#{test_url}/payment?echo=true"
+              else
+                "#{live_url}/payment?echo=true"
+              end
 
         begin
           body = params.to_json
@@ -275,27 +272,27 @@ module ActiveMerchant
           response,
           test: test?,
           authorization: authorization_from(params, response),
-          avs_result: {code: AVS_CODE_MAPPING[response.dig('risk', 'avsResponseCode')]},
+          avs_result: { code: AVS_CODE_MAPPING[response.dig('risk', 'avsResponseCode')] },
           cvv_result: CVV_CODE_MAPPING[response.dig('risk', 'cvvResponseCode')],
           error_code: error_code(response, success_from(response)),
           token: token
         )
       end
-      
+
       def commit_delete(params)
-        if test?
-          url = "#{test_url}/#{params[:id]}"
-        else
-          url = "#{live_url}/#{params[:id]}"
-        end
-        
+        url = if test?
+                "#{test_url}/payment/#{params[:id]}"
+              else
+                "#{live_url}/payment/#{params[:id]}"
+              end
+
         begin
           ssl_request(:delete, url, nil, headers)
           success = true
-          message = "Approved"
+          message = 'Approved'
         rescue ResponseError => e
           success = false
-          message = "Declined"
+          message = 'Declined'
         end
 
         Response.new(
@@ -311,11 +308,11 @@ module ActiveMerchant
 
         if token
           success = true
-          message = "Approved"
+          message = 'Approved'
           token = token
         else
           success = false
-          message = "Declined"
+          message = 'Declined'
         end
 
         Response.new(
@@ -329,11 +326,11 @@ module ActiveMerchant
 
       def tokenize_card(params)
         limited_use_token = get_limited_use_token
-        if test?
-          url = "#{test_url}/vault?token=#{limited_use_token}"
-        else
-          url = "#{live_url}/vault?token=#{limited_use_token}"
-        end
+        url = if test?
+                "#{test_url}/vault?token=#{limited_use_token}"
+              else
+                "#{live_url}/vault?token=#{limited_use_token}"
+              end
 
         card = params[:cardAccount]
 
@@ -349,11 +346,11 @@ module ActiveMerchant
       end
 
       def get_limited_use_token
-        if test?
-          url = "#{test_url}/auth/token/#{@options[:merchid]}"
-        else
-          url = "#{live_url}/auth/token/#{@options[:merchid]}"
-        end
+        url = if test?
+                "#{test_url}/auth/token/#{@options[:merchid]}"
+              else
+                "#{live_url}/auth/token/#{@options[:merchid]}"
+              end
 
         begin
           raw_response = ssl_post(url, nil, headers)
@@ -369,7 +366,7 @@ module ActiveMerchant
         response['status'] == 'Approved'
       end
 
-      def authorization_from(params, response)
+      def authorization_from(_params, response)
         [
           response['id'],
           response['authCode'],
@@ -381,7 +378,7 @@ module ActiveMerchant
         return if success
         response['errorCode']
       end
-      
+
       def handle_message(response, success)
         if success
           response['status']
@@ -400,7 +397,7 @@ module ActiveMerchant
         auth = Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}").strip
         {
           'Content-Type' => 'application/json',
-          'Authorization'  => 'Basic ' + auth,
+          'Authorization' => 'Basic ' + auth
         }
       end
 
@@ -415,9 +412,8 @@ module ActiveMerchant
       end
 
       def json_error(raw_response)
-        {"error" => "Unable to parse response: #{raw_response.inspect}"}
+        { 'error' => "Unable to parse response: #{raw_response.inspect}" }
       end
-
     end
   end
 end
