@@ -135,6 +135,12 @@ card_stream:
 cardknox:
   api_key: ActiveMerchant_Test
 
+# Working credentials, no need to replace
+cardprocess:
+  user_id: 8a8294174e735d0c014e78beb6c5154f
+  password: cTZjAm9c87
+  entity_id: 8a8294174e735d0c014e78beb6b9154b
+
 # Cashnet doesn't provide public testing data
 cashnet:
   merchant: 'X'
@@ -669,6 +675,10 @@ payment_express:
   login: LOGIN
   password: PASSWORD
 
+paymentez:
+  application_code: APPCODE
+  app_key: APPKEY
+
 paymill:
   private_key: a9580be4a7b9d0151a3da88c6c935ce0
   public_key: 57313835619696ac361dc591bc973626
@@ -1046,6 +1056,10 @@ s5:
 safe_charge:
   client_login_id: 'SpreedlyTestTRX'
   client_password: '5Jp5xKmgqY'
+
+safe_charge_three_ds:
+  client_login_id: 'SpreedlyManTestTRX'
+  client_password: 'iGx9DQQHQG'
 
 sage:
   login: 214282982451

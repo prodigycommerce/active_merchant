@@ -22,7 +22,9 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         post = {}
-        add_transaction_data("Sale", post, money, options)
+        post[:sg_APIType] = 1 if options[:three_d_secure]
+        trans_type = options[:three_d_secure] ? "Sale3D" : "Sale"
+        add_transaction_data(trans_type, post, money, options)
         add_payment(post, payment)
         add_customer_details(post, payment, options)
 
@@ -120,6 +122,9 @@ module ActiveMerchant #:nodoc:
         post[:sg_UserID] = options[:user_id] if options[:user_id]
         post[:sg_AuthType] = options[:auth_type] if options[:auth_type]
         post[:sg_ExpectedFulfillmentCount] = options[:expected_fulfillment_count] if options[:expected_fulfillment_count]
+        post[:sg_WebsiteID] = options[:website_id] if options[:website_id]
+        post[:sg_IPAddress] = options[:ip] if options[:ip]
+        post[:sg_VendorID] = options[:vendor_id] if options[:vendor_id]
       end
 
       def add_payment(post, payment)
@@ -150,19 +155,30 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.root.xpath('*').each do |node|
-          response[node.name.underscore.downcase.to_sym] = node.text
+          if node.elements.size == 0
+            response[node.name.underscore.downcase.to_sym] = node.text
+          else
+            node.traverse do |childnode|
+              childnode_to_response(response, childnode)
+            end
+          end
         end
-
         response
       end
 
-      def childnode_to_response(response, node, childnode)
-        name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        if name == 'payment_method_data' && !childnode.elements.empty?
-          response[name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+      def childnode_to_response(response, childnode)
+        if childnode.elements.size == 0
+          element_name_to_symbol(response, childnode)
         else
-          response[name.to_sym] = childnode.text
+          childnode.traverse do |childnode|
+            element_name_to_symbol(response, childnode)
+          end
         end
+      end
+
+      def element_name_to_symbol(response, childnode)
+        name = "#{childnode.name.downcase}"
+        response[name.to_sym] = childnode.text
       end
 
       def commit(parameters)

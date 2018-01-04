@@ -45,6 +45,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_extra_data(post, options)
+        add_shopper_interaction(post,payment,options)
         add_address(post, options)
         commit('authorise', post)
       end
@@ -97,17 +98,21 @@ module ActiveMerchant #:nodoc:
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
-        post[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
+      end
+
+      def add_shopper_interaction(post, payment, options={})
+        shopper_interaction = payment.verification_value ?  "Ecommerce" : "ContAuth"
+        post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
       end
 
       def add_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
-        if address = options[:billing_address] || options[:address]
+        if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:card][:billingAddress] = {}
-          post[:card][:billingAddress][:street] = address[:address1] if address[:address1]
-          post[:card][:billingAddress][:houseNumberOrName] = address[:address2] if address[:address2]
+          post[:card][:billingAddress][:street] = address[:address1] || 'N/A'
+          post[:card][:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
           post[:card][:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:card][:billingAddress][:city] = address[:city] if address[:city]
+          post[:card][:billingAddress][:city] = address[:city] || 'N/A'
           post[:card][:billingAddress][:stateOrProvince] = address[:state] if address[:state]
           post[:card][:billingAddress][:country] = address[:country] if address[:country]
         end
@@ -138,8 +143,9 @@ module ActiveMerchant #:nodoc:
           number: payment.number,
           cvc: payment.verification_value
         }
+
         card.delete_if{|k,v| v.blank? }
-        requires!(card, :expiryMonth, :expiryYear, :holderName, :number, :cvc)
+        requires!(card, :expiryMonth, :expiryYear, :holderName, :number)
         post[:card] = card
       end
 
