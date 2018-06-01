@@ -157,7 +157,7 @@ module ActiveMerchant
           country: address[:country],
           zip: address[:zip]
         }
-        
+
         params[:tokenize] = 'Y'
       end
 
@@ -199,7 +199,7 @@ module ActiveMerchant
       def tax_exempt(tax_amount)
         tax_amount.to_f == 0
       end
-      
+
       def dollars_to_cents(dollars)
         (100 * dollars.to_r).to_i
       end
@@ -265,7 +265,7 @@ module ActiveMerchant
           token = nil
         end
       end
-      
+
       def success_from(response)
         response['status'] == 'COMPLETED' || response['status'] == 'PENDING'
       end
