@@ -29,7 +29,7 @@ class RemoteBorgunTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_usd
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: "USD"))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'USD'))
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -121,8 +121,8 @@ class RemoteBorgunTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    *new_auth, _ = auth.authorization.split("|")
-    assert void = @gateway.void(new_auth.join("|"))
+    *new_auth, _ = auth.authorization.split('|')
+    assert void = @gateway.void(new_auth.join('|'))
     assert_success void
   end
 
@@ -162,5 +162,15 @@ class RemoteBorgunTest < Test::Unit::TestCase
     end
     assert response = authentication_exception.response
     assert_match(/Access Denied/, response.body)
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
   end
 end

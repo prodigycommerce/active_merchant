@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[MX EC VE CO BR CL]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club elo]
 
       self.homepage_url = 'https://secure.paymentez.com/'
       self.display_name = 'Paymentez'
@@ -38,7 +38,8 @@ module ActiveMerchant #:nodoc:
         'visa' => 'vi',
         'master' => 'mc',
         'american_express' => 'ax',
-        'diners_club' => 'di'
+        'diners_club' => 'di',
+        'elo' => 'el'
       }.freeze
 
       def initialize(options = {})
@@ -52,31 +53,37 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_customer_data(post, options)
+        add_extra_params(post, options)
+        action = payment.is_a?(String) ? 'debit' : 'debit_cc'
 
-        commit_transaction('debit_cc', post)
+        commit_transaction(action, post)
       end
 
       def authorize(money, payment, options = {})
         post = {}
 
         add_invoice(post, money, options)
+        add_payment(post, payment)
         add_customer_data(post, options)
+        add_extra_params(post, options)
 
-        MultiResponse.run do |r|
-          r.process { store(payment, options) }
-          post[:card] = { token: r.authorization }
-          r.process { commit_transaction('authorize', post) }
-        end
+        commit_transaction('authorize', post)
       end
 
-      def capture(_money, authorization, _options = {})
-        post = { transaction: { id: authorization } }
+      def capture(money, authorization, _options = {})
+        post = {
+            transaction: { id: authorization }
+        }
+        post[:order] = {amount: amount(money).to_f} if money
 
         commit_transaction('capture', post)
       end
 
-      def refund(_money, authorization, options = {})
-        void(authorization, options)
+      def refund(money, authorization, options = {})
+        post = {transaction: {id: authorization}}
+        post[:order] = {amount: amount(money).to_f} if money
+
+        commit_transaction('refund', post)
       end
 
       def void(authorization, _options = {})
@@ -115,10 +122,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r{(\\?"number\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]')
-          .gsub(%r{(\\?"cvc\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]')
-          .gsub(%r{(Auth-Token: )([A-Za-z0-9=]+)}, '\1[FILTERED]')
+        transcript.
+          gsub(%r{(\\?"number\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(\\?"cvc\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(Auth-Token: )([A-Za-z0-9=]+)}, '\1[FILTERED]')
       end
 
       private
@@ -130,6 +137,9 @@ module ActiveMerchant #:nodoc:
         post[:user][:email] = options[:email]
         post[:user][:ip_address] = options[:ip] if options[:ip]
         post[:user][:fiscal_number] = options[:fiscal_number] if options[:fiscal_number]
+        if phone = options[:phone] || options.dig(:billing_address, :phone)
+          post[:user][:phone] = phone
+        end
       end
 
       def add_invoice(post, money, options)
@@ -144,16 +154,28 @@ module ActiveMerchant #:nodoc:
         post[:order][:installments] = options[:installments] if options[:installments]
         post[:order][:installments_type] = options[:installments_type] if options[:installments_type]
         post[:order][:taxable_amount] = options[:taxable_amount] if options[:taxable_amount]
+        post[:order][:tax_percentage] = options[:tax_percentage] if options[:tax_percentage]
       end
 
       def add_payment(post, payment)
         post[:card] ||= {}
-        post[:card][:number] = payment.number
-        post[:card][:holder_name] = payment.name
-        post[:card][:expiry_month] = payment.month
-        post[:card][:expiry_year] = payment.year
-        post[:card][:cvc] = payment.verification_value
-        post[:card][:type] = CARD_MAPPING[payment.brand]
+        if payment.is_a?(String)
+          post[:card][:token] = payment
+        else
+          post[:card][:number] = payment.number
+          post[:card][:holder_name] = payment.name
+          post[:card][:expiry_month] = payment.month
+          post[:card][:expiry_year] = payment.year
+          post[:card][:cvc] = payment.verification_value
+          post[:card][:type] = CARD_MAPPING[payment.brand]
+        end
+      end
+
+      def add_extra_params(post, options)
+        extra_params = {}
+        extra_params.merge!(options[:extra_params]) if options[:extra_params]
+
+        post['extra_params'] = extra_params unless extra_params.empty?
       end
 
       def parse(body)
@@ -168,7 +190,12 @@ module ActiveMerchant #:nodoc:
         rescue ResponseError => e
           raw_response = e.response.body
         end
-        parse(raw_response)
+
+        begin
+          parse(raw_response)
+        rescue JSON::ParserError
+          {'status' => 'Internal server error'}
+        end
       end
 
       def commit_transaction(action, parameters)
@@ -213,10 +240,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if success_from(response)
-          response['transaction'] && response['transaction']['message']
-        else
+        if !success_from(response) && response['error']
           response['error'] && response['error']['type']
+        else
+          response['transaction'] && response['transaction']['message']
         end
       end
 

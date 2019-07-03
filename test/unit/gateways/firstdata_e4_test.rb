@@ -7,8 +7,8 @@ class FirstdataE4Test < Test::Unit::TestCase
 
   def setup
     @gateway = FirstdataE4Gateway.new(
-      :login    => "A00427-01",
-      :password => "testus"
+      :login    => 'A00427-01',
+      :password => 'testus'
     )
 
     @credit_card = credit_card
@@ -18,7 +18,7 @@ class FirstdataE4Test < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
-    @authorization = "ET1700;106625152;4738"
+    @authorization = 'ET1700;106625152;4738'
   end
 
   def test_invalid_credentials
@@ -38,7 +38,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
 
-    FirstdataE4Gateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
+    FirstdataE4Gateway::SENSITIVE_FIELDS.each { |f| assert !response.params.has_key?(f.to_s) }
   end
 
   def test_successful_purchase_with_specified_currency
@@ -51,7 +51,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
     assert_equal 'GBP', response.params['currency']
 
-    FirstdataE4Gateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
+    FirstdataE4Gateway::SENSITIVE_FIELDS.each { |f| assert !response.params.has_key?(f.to_s) }
   end
 
   def test_successful_purchase_with_token
@@ -64,7 +64,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     options_with_specified_currency = @options.merge({currency: 'GBP'})
     @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
     assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014',
-                                        options_with_specified_currency)
+      options_with_specified_currency)
     assert_success response
     assert_equal 'GBP', response.params['currency']
   end
@@ -110,7 +110,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal response.error_code, "invalid_expiry_date"
+    assert_equal response.error_code, 'invalid_expiry_date'
   end
 
   def test_successful_verify
@@ -122,7 +122,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
   def test_expdate
     assert_equal(
-      "%02d%s" % [@credit_card.month, @credit_card.year.to_s[-2..-1]],
+      '%02d%s' % [@credit_card.month, @credit_card.year.to_s[-2..-1]],
       @gateway.send(:expdate, @credit_card)
     )
   end
@@ -161,24 +161,24 @@ class FirstdataE4Test < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match "<VerificationStr1>456 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>", data
+      assert_match '<VerificationStr1>456 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>', data
     end.respond_with(successful_purchase_response)
   end
 
   def test_tax_fields_are_sent
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(tax1_amount: 830, tax1_number: "Br59a"))
+      @gateway.purchase(@amount, @credit_card, @options.merge(tax1_amount: 830, tax1_number: 'Br59a'))
     end.check_request do |endpoint, data, headers|
-      assert_match "<Tax1Amount>830", data
-      assert_match "<Tax1Number>Br59a", data
+      assert_match '<Tax1Amount>830', data
+      assert_match '<Tax1Number>Br59a', data
     end.respond_with(successful_purchase_response)
   end
 
   def test_customer_ref_is_sent
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(customer: "932"))
+      @gateway.purchase(@amount, @credit_card, @options.merge(customer: '932'))
     end.check_request do |endpoint, data, headers|
-      assert_match "<Customer_Ref>932", data
+      assert_match '<Customer_Ref>932', data
     end.respond_with(successful_purchase_response)
   end
 
@@ -186,18 +186,18 @@ class FirstdataE4Test < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match "<Ecommerce_Flag>07</Ecommerce_Flag>", data
+      assert_match '<Ecommerce_Flag>07</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
 
   def test_eci_numeric_padding
     @credit_card = network_tokenization_credit_card
-    @credit_card.eci = "5"
+    @credit_card.eci = '5'
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+      assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
 
     @credit_card = network_tokenization_credit_card
@@ -206,31 +206,31 @@ class FirstdataE4Test < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+      assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
 
   def test_eci_option_value
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(eci: "05"))
+      @gateway.purchase(@amount, @credit_card, @options.merge(eci: '05'))
     end.check_request do |endpoint, data, headers|
-      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+      assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
 
   def test_network_tokenization_requests_with_amex
     stub_comms do
       credit_card = network_tokenization_credit_card(
-        "378282246310005",
-        brand: "american_express",
-        transaction_id: "123",
-        eci: "05",
-        payment_cryptogram: "whatever_the_cryptogram_of_at_least_20_characters_is",
+        '378282246310005',
+        brand: 'american_express',
+        transaction_id: '123',
+        eci: '05',
+        payment_cryptogram: 'whatever_the_cryptogram_of_at_least_20_characters_is'
       )
 
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |_, data, _|
-      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+      assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
       assert_match "<XID>mrLdtHIWq2nLXq7IrA==\n</XID>", data
       assert_match "<CAVV>whateverthecryptogramofatlc=\n</CAVV>", data
       assert_xml_valid_to_wsdl(data)
@@ -240,18 +240,18 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_network_tokenization_requests_with_discover
     stub_comms do
       credit_card = network_tokenization_credit_card(
-        "6011111111111117",
-        brand: "discover",
-        transaction_id: "123",
-        eci: "05",
-        payment_cryptogram: "whatever_the_cryptogram_is",
+        '6011111111111117',
+        brand: 'discover',
+        transaction_id: '123',
+        eci: '05',
+        payment_cryptogram: 'whatever_the_cryptogram_is'
       )
 
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |_, data, _|
-      assert_match "<Ecommerce_Flag>04</Ecommerce_Flag>", data
-      assert_match "<XID>123</XID>", data
-      assert_match "<CAVV>whatever_the_cryptogram_is</CAVV>", data
+      assert_match '<Ecommerce_Flag>04</Ecommerce_Flag>', data
+      assert_match '<XID>123</XID>', data
+      assert_match '<CAVV>whatever_the_cryptogram_is</CAVV>', data
       assert_xml_valid_to_wsdl(data)
     end.respond_with(successful_purchase_response)
   end
@@ -260,18 +260,18 @@ class FirstdataE4Test < Test::Unit::TestCase
     %w(visa mastercard other).each do |brand|
       stub_comms do
         credit_card = network_tokenization_credit_card(
-          "378282246310005",
+          '378282246310005',
           brand: brand,
-          transaction_id: "123",
-          eci: "05",
-          payment_cryptogram: "whatever_the_cryptogram_is",
+          transaction_id: '123',
+          eci: '05',
+          payment_cryptogram: 'whatever_the_cryptogram_is'
         )
 
         @gateway.purchase(@amount, credit_card, @options)
       end.check_request do |_, data, _|
-        assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
-        assert_match "<XID>123</XID>", data
-        assert_match "<CAVV>whatever_the_cryptogram_is</CAVV>", data
+        assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
+        assert_match '<XID>123</XID>', data
+        assert_match '<CAVV>whatever_the_cryptogram_is</CAVV>', data
         assert_xml_valid_to_wsdl(data)
       end.respond_with(successful_purchase_response)
     end
@@ -279,18 +279,18 @@ class FirstdataE4Test < Test::Unit::TestCase
 
   def test_requests_include_card_authentication_data
     authentication_hash = {
-      eci: "06",
-      cavv: "SAMPLECAVV",
-      xid: "SAMPLEXID"
+      eci: '06',
+      cavv: 'SAMPLECAVV',
+      xid: 'SAMPLEXID'
     }
     options_with_authentication_data = @options.merge(authentication_hash)
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_authentication_data)
     end.check_request do |endpoint, data, headers|
-      assert_match "<Ecommerce_Flag>06</Ecommerce_Flag>", data
-      assert_match "<CAVV>SAMPLECAVV</CAVV>", data
-      assert_match "<XID>SAMPLEXID</XID>", data
+      assert_match '<Ecommerce_Flag>06</Ecommerce_Flag>', data
+      assert_match '<CAVV>SAMPLECAVV</CAVV>', data
+      assert_match '<XID>SAMPLEXID</XID>', data
       assert_xml_valid_to_wsdl(data)
     end.respond_with(successful_purchase_response)
   end
@@ -305,22 +305,19 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_add_swipe_data_with_creditcard
-    @credit_card.track_data = "Track Data"
+    @credit_card.track_data = 'Track Data'
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
-      assert_match "<Track1>Track Data</Track1>", data
-      assert_match "<Ecommerce_Flag>R</Ecommerce_Flag>", data
+      assert_match '<Track1>Track Data</Track1>', data
+      assert_match '<Ecommerce_Flag>R</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
 
-  def test_supports_scrubbing?
+  def test_transcript_scrubbing
     assert @gateway.supports_scrubbing?
-  end
-
-  def test_scrub
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
   end
 
   def test_supports_network_tokenization
@@ -336,7 +333,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_empty errors, "XSD validation errors in the following XML:\n#{doc}"
   end
 
-  def pre_scrubbed
+  def pre_scrub
     <<-PRE_SCRUBBED
       opening connection to api.demo.globalgatewaye4.firstdata.com:443...
       opened
@@ -366,14 +363,14 @@ class FirstdataE4Test < Test::Unit::TestCase
     PRE_SCRUBBED
   end
 
-  def post_scrubbed
+  def post_scrub
     <<-POST_SCRUBBED
       opening connection to api.demo.globalgatewaye4.firstdata.com:443...
       opened
       starting SSL for api.demo.globalgatewaye4.firstdata.com:443...
       SSL established
       <- "POST /transaction/v11 HTTP/1.1\r\nContent-Type: application/xml\r\nAccepts: application/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.demo.globalgatewaye4.firstdata.com\r\nContent-Length: 593\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>REDACTED</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>[FILTERED]</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>[FILTERED]</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV>[FILTERED]</CAVV><XID/><Ecommerce_Flag/></Transaction>"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>[FILTERED]</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>[FILTERED]</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>[FILTERED]</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV>[FILTERED]</CAVV><XID/><Ecommerce_Flag/></Transaction>"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
       -> "Content-Type: application/xml; charset=utf-8\r\n"
@@ -484,6 +481,7 @@ issuer pursuant to cardholder agreement.
   </TransactionResult>
     RESPONSE
   end
+
   def successful_purchase_with_specified_currency_response
     <<-RESPONSE
   <?xml version="1.0" encoding="UTF-8"?>
@@ -572,6 +570,7 @@ issuer pursuant to cardholder agreement.
   </TransactionResult>
     RESPONSE
   end
+
   def successful_purchase_response_without_transarmor
     <<-RESPONSE
   <?xml version="1.0" encoding="UTF-8"?>
@@ -660,6 +659,7 @@ issuer pursuant to cardholder agreement.
   </TransactionResult>
     RESPONSE
   end
+
   def successful_refund_response
     <<-RESPONSE
   <?xml version="1.0" encoding="UTF-8"?>
@@ -1040,7 +1040,7 @@ response: !ruby/object:Net::HTTPBadRequest
   read: true
   socket:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def bad_credentials_response
@@ -1077,7 +1077,7 @@ response: !ruby/object:Net::HTTPUnauthorized
   http_version: '1.1'
   socket:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_void_response
