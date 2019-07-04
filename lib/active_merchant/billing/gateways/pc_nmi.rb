@@ -13,7 +13,7 @@ module ActiveMerchant
 
       self.homepage_url = 'http://www.nmi.com/'
       self.display_name = 'Network Merchants Inc (NMI)'
-      
+
       AVS_CODE_MAPPING = {
         '0' => 'R',
         '1' => 'L',
@@ -51,7 +51,7 @@ module ActiveMerchant
       end
 
       def purchase(amount, payment_method, options = {})
-        params = {type: 'sale'}
+        params = { type: 'sale' }
 
         add_invoice(params, options)
         add_payment_method(params, payment_method)
@@ -63,7 +63,7 @@ module ActiveMerchant
       end
 
       def authorize(amount, payment_method, options = {})
-        params = {type: 'auth'}
+        params = { type: 'auth' }
 
         add_invoice(params, options)
         add_payment_method(params, payment_method)
@@ -75,7 +75,7 @@ module ActiveMerchant
       end
 
       def capture(amount, authorization, options = {})
-        params = {type: 'capture'}
+        params = { type: 'capture' }
 
         add_authorization_info(params, authorization)
         add_amount(params, amount, options)
@@ -84,7 +84,7 @@ module ActiveMerchant
       end
 
       def refund(amount, authorization, options = {})
-        params = {type: 'refund'}
+        params = { type: 'refund' }
 
         add_authorization_info(params, authorization)
         add_amount(params, amount, options)
@@ -93,7 +93,7 @@ module ActiveMerchant
       end
 
       def void(authorization, options = {})
-        params = {type: 'void'}
+        params = { type: 'void' }
 
         add_authorization_info(params, authorization)
 
@@ -101,7 +101,7 @@ module ActiveMerchant
       end
 
       def verify(creditcard, options = {})
-        params = {type: 'validate', amount: '0', currency: (options[:currency] || default_currency).upcase}
+        params = { type: 'validate', amount: '0', currency: (options[:currency] || default_currency).upcase }
 
         add_invoice(params, options)
         add_credit_card(params, creditcard)
@@ -177,18 +177,14 @@ module ActiveMerchant
       end
 
       def add_authorization_info(params, authorization)
-        transactionid, authcode, amount = authorization.split('|')
+        transactionid, _authcode, _amount = authorization.split('|')
         params[:transactionid] = transactionid
       end
 
       def commit(params, options)
         params[:username] = @options[:username]
         params[:password] = @options[:password]
-        if test?
-          url = test_url
-        else
-          url = live_url
-        end
+        url = test? ? test_url : live_url
 
         begin
           body = params.to_query
@@ -196,7 +192,7 @@ module ActiveMerchant
           response = parse(raw_response)
         rescue ResponseError => e
           response = response_error(e.response.body)
-        rescue Exception
+        rescue StandardError
           response = parse_error(raw_response)
         end
 
@@ -236,11 +232,11 @@ module ActiveMerchant
       end
 
       def headers
-        { "Content-Type"  => "application/x-www-form-urlencoded;charset=UTF-8" }
+        { 'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map { |k,v| [k.intern, v.first] }]
+        Hash[CGI.parse(body).map { |k, v| [k.intern, v.first] }]
       end
 
       def error_code(response, success)
@@ -253,12 +249,12 @@ module ActiveMerchant
 
       def response_error(raw_response)
         parse(raw_response)
-      rescue Exception
+      rescue StandardError
         parse_error(raw_response)
       end
 
       def parse_error(raw_response)
-        {"error" => "Unable to parse response: #{raw_response.inspect}"}
+        { 'error' => "Unable to parse response: #{raw_response.inspect}" }
       end
     end
   end

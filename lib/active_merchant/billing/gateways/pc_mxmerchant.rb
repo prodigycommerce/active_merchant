@@ -123,11 +123,11 @@ module ActiveMerchant
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(/(Authorization: Basic )\w+/, '\1FILTERED]')
-          .gsub(/(\\?"number\\?":\\?")\d+/, '\1[FILTERED]')
-          .gsub(/(\\?"cvv\\?":\\?")\d+/, '\1[FILTERED]')
-          .gsub(/(\\?"merchid\\?":\\?")\d+/, '\1[FILTERED]')
+        transcript.
+          gsub(/(Authorization: Basic )\w+/, '\1FILTERED]').
+          gsub(/(\\?"number\\?":\\?")\d+/, '\1[FILTERED]').
+          gsub(/(\\?"cvv\\?":\\?")\d+/, '\1[FILTERED]').
+          gsub(/(\\?"merchid\\?":\\?")\d+/, '\1[FILTERED]')
       end
 
       private
@@ -221,21 +221,19 @@ module ActiveMerchant
       end
 
       def add_authorization_authcode(params, authorization)
-        id, authcode, token, = authorization.split('|')
+        _id, authcode, _token, = authorization.split('|')
 
         params[:authCode] = authcode
       end
 
       def add_authorization_token(params, authorization)
-        id, authcode, token, = authorization.split('|')
+        _id, _authcode, token, = authorization.split('|')
 
-        card_account = {}
-        card_account[:token] = token
-        params[:cardAccount] = card_account
+        params[:cardAccount] = { token: token }
       end
 
       def add_authorization_id(params, authorization)
-        id, authcode, token, = authorization.split('|')
+        id, _authcode, _token, = authorization.split('|')
 
         params[:id] = id
       end
@@ -246,15 +244,10 @@ module ActiveMerchant
 
       def commit(params, _options)
         params[:merchantId] = @options[:merchid]
-        token = nil
 
-        token = tokenize_card(params) if params.delete(:tokenize)
+        token = params.delete(:tokenize) ? tokenize_card(params) : nil
 
-        url = if test?
-                "#{test_url}/payment?echo=true"
-              else
-                "#{live_url}/payment?echo=true"
-              end
+        url = "#{base_url}/payment?echo=true"
 
         begin
           body = params.to_json
@@ -280,17 +273,13 @@ module ActiveMerchant
       end
 
       def commit_delete(params)
-        url = if test?
-                "#{test_url}/payment/#{params[:id]}"
-              else
-                "#{live_url}/payment/#{params[:id]}"
-              end
+        url = "#{base_url}/payment/#{params[:id]}"
 
         begin
           ssl_request(:delete, url, nil, headers)
           success = true
           message = 'Approved'
-        rescue ResponseError => e
+        rescue ResponseError => _e
           success = false
           message = 'Declined'
         end
@@ -325,41 +314,24 @@ module ActiveMerchant
       end
 
       def tokenize_card(params)
-        limited_use_token = get_limited_use_token
-        url = if test?
-                "#{test_url}/vault?token=#{limited_use_token}"
-              else
-                "#{live_url}/vault?token=#{limited_use_token}"
-              end
+        url = "#{base_url}/vault?token=#{limited_use_token}"
 
         card = params[:cardAccount]
 
-        begin
-          body = card.to_json
-          raw_response = ssl_post(url, body, headers)
-          token = parse("[#{raw_response}]")[0]
-        rescue ResponseError
-          token = nil
-        rescue JSON::ParserError
-          token = nil
-        end
+        body = card.to_json
+        raw_response = ssl_post(url, body, headers)
+        parse("[#{raw_response}]")[0]
+      rescue ResponseError, JSON::ParserError
+        nil
       end
 
-      def get_limited_use_token
-        url = if test?
-                "#{test_url}/auth/token/#{@options[:merchid]}"
-              else
-                "#{live_url}/auth/token/#{@options[:merchid]}"
-              end
+      def limited_use_token
+        url = "#{base_url}/auth/token/#{@options[:merchid]}"
 
-        begin
-          raw_response = ssl_post(url, nil, headers)
-          limited_use_token = parse("[#{raw_response}]")[0]
-        rescue ResponseError
-          limited_use_token = nil
-        rescue JSON::ParserError
-          limited_use_token = nil
-        end
+        raw_response = ssl_post(url, nil, headers)
+        parse("[#{raw_response}]")[0]
+      rescue ResponseError, JSON::ParserError
+        nil
       end
 
       def success_from(response)
@@ -413,6 +385,10 @@ module ActiveMerchant
 
       def json_error(raw_response)
         { 'error' => "Unable to parse response: #{raw_response.inspect}" }
+      end
+
+      def base_url
+        @base_url ||= test? ? test_url : live_url
       end
     end
   end
