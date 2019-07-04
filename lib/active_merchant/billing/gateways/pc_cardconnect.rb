@@ -13,7 +13,7 @@ module ActiveMerchant
 
       self.homepage_url = 'http://www.cardconnect.com/'
       self.display_name = 'CardConnect'
-      
+
       CREDIT_CARD_BRAND = {
         'visa' => 'VISA',
         'master' => 'MC',
@@ -29,7 +29,7 @@ module ActiveMerchant
       end
 
       def purchase(amount, payment_method, options = {})
-        params = {endpoint: 'auth', capture: 'Y'}
+        params = { capture: 'Y' }
 
         add_invoice(params, options)
         add_payment_method(params, payment_method)
@@ -38,56 +38,50 @@ module ActiveMerchant
         add_level3(params, options)
         add_amount(params, amount, options)
 
-        commit(params, options)
+        commit('auth', params, options)
       end
 
       def authorize(amount, payment_method, options = {})
-        params = {endpoint: 'auth'}
+        params = {}
 
         add_invoice(params, options)
         add_payment_method(params, payment_method)
         add_address(params, options)
         add_amount(params, amount, options)
 
-        commit(params, options)
+        commit('auth', params, options)
       end
 
       def capture(amount, authorization, options = {})
-        params = {endpoint: 'capture'}
+        params = {}
 
         add_authorization_info(params, authorization)
         add_level2(params, options)
         add_level3(params, options)
         add_amount(params, amount, options)
 
-        commit(params, options)
+        commit('capture', params, options)
       end
 
       def refund(amount, authorization, options = {})
-        params = {endpoint: 'refund'}
+        params = {}
 
         add_authorization_info(params, authorization)
         add_amount(params, amount, options)
 
-        commit(params, options)
+        commit('refund', params, options)
       end
 
       def void(authorization, options = {})
-        params = {endpoint: 'void'}
+        params = {}
 
         add_authorization_info(params, authorization)
 
-        commit(params, options)
+        commit('void', params, options)
       end
 
-      def verify(creditcard, options={})
-        params = {endpoint: 'auth', amount: '0', currency: (options[:currency] || default_currency).upcase}
-
-        add_invoice(params, options)
-        add_credit_card(params, creditcard)
-        add_address(params, options)
-
-        commit(params, options)
+      def verify(credit_card, options = {})
+        authorize(0, credit_card, options)
       end
 
       def supports_scrubbing?
@@ -163,15 +157,15 @@ module ActiveMerchant
         params[:items] = []
         level3[:line_items].each_with_index do |item, index|
           params[:items] <<
-          {
-            :lineno => index + 1,
-            :material => item[:commodity_code],
-            :description => item[:description],
-            :upc => item[:product_code],
-            :quantity => item[:quantity],
-            :uom => item[:unit_of_measure],
-            :unitcost => item[:price]
-          }
+            {
+              :lineno => index + 1,
+              :material => item[:commodity_code],
+              :description => item[:description],
+              :upc => item[:product_code],
+              :quantity => item[:quantity],
+              :uom => item[:unit_of_measure],
+              :unitcost => item[:price]
+            }
         end
         params
       end
@@ -182,19 +176,15 @@ module ActiveMerchant
       end
 
       def add_authorization_info(params, authorization)
-        retref, authcode, amount = authorization.split('|')
+        retref, authcode, _amount = authorization.split('|')
         params[:retref] = retref
         params[:authcode] = authcode
       end
 
-      def commit(params, options)
+      def commit(action, params, options)
         params[:merchid] = @options[:merchid]
-        endpoint = params.delete(:endpoint)
-        if test?
-          url = "#{test_url}/#{endpoint}"
-        else
-          url = "#{live_url}/#{endpoint}"
-        end
+        base_url = test? ? test_url : live_url
+        url = "#{base_url}/#{action}"
 
         begin
           body = params.to_json
@@ -238,7 +228,7 @@ module ActiveMerchant
           response['resptext']
         ].join('|')
       end
-      
+
       def handle_message(response, success)
         if success
           response['resptext']
@@ -268,8 +258,8 @@ module ActiveMerchant
       end
 
       def json_error(raw_response)
-        {"error" => "Unable to parse response: #{raw_response.inspect}"}
+        {'error' => "Unable to parse response: #{raw_response.inspect}"}
       end
     end
-  end   
+  end
 end
