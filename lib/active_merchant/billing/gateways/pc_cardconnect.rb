@@ -1,8 +1,8 @@
 module ActiveMerchant
   module Billing
     class PcCardconnectGateway < Gateway
-      self.test_url = 'https://fts.cardconnect.com:6443/cardconnect/rest/'
-      self.live_url = 'https://fts.cardconnect.com:8443/cardconnect/rest/'
+      self.test_url = 'https://fts.cardconnect.com:6443/cardconnect/rest'
+      self.live_url = 'https://fts.cardconnect.com:8443/cardconnect/rest'
 
       self.default_currency = 'USD'
       self.money_format = :cents
