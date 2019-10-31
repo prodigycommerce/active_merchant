@@ -6,7 +6,7 @@ module ActiveMerchant
       self.live_url = 'https://secure.networkmerchants.com/api/transact.php'
 
       self.default_currency = 'USD'
-      self.money_format = :cents
+      self.money_format = :dollars
       self.supported_countries = ['US']
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
